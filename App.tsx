@@ -17,6 +17,7 @@ import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
 
 type Screen = "home" | "signup" | "signin";
+console.log("app started");
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
