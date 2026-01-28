@@ -9,6 +9,7 @@
     "web": "expo start --web"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.93.2",
     "expo": "~54.0.32",
     "expo-status-bar": "~3.0.9",
     "nativewind": "^4.2.1",
