@@ -136,7 +136,7 @@ export function ScheduleScreen({
               Date & time
             </Text>
             <TouchableOpacity
-              onPress={() => setShowPicker(true)}
+              onPress={() => setShowPicker((prev) => !prev)}
               className="bg-neutral-900 rounded-2xl px-5 py-4 flex-row items-center border border-neutral-800 mb-5"
             >
               <View className="w-3 h-3 rounded-full bg-amber-500 mr-4" />
