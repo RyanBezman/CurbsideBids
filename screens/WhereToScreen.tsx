@@ -2,14 +2,13 @@ import { StatusBar } from "expo-status-bar";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Image,
 } from "react-native";
+import { LocationInput, RideTypeCard } from "../components";
 import type { Screen, RideType } from "./types";
 
 const RIDE_OPTIONS = [
@@ -84,79 +83,31 @@ export function WhereToScreen({
               <Text className="text-2xl font-bold text-white">Where to?</Text>
             </View>
 
-            <View className="mb-4">
-              <Text className="text-neutral-400 text-sm mb-2 ml-1">
-                Pickup
-              </Text>
-              <View className="bg-neutral-900 rounded-2xl px-5 py-4 flex-row items-center border border-neutral-800">
-                <View className="w-3 h-3 rounded-full bg-green-500 mr-4" />
-                <TextInput
-                  value={pickup}
-                  onChangeText={onPickupChange}
-                  placeholder="Enter pickup location"
-                  placeholderTextColor="#525252"
-                  className="flex-1 text-white text-base py-1"
-                />
-              </View>
-            </View>
-
-            <View className="mb-5">
-              <Text className="text-neutral-400 text-sm mb-2 ml-1">
-                Dropoff
-              </Text>
-              <View className="bg-neutral-900 rounded-2xl px-5 py-4 flex-row items-center border border-neutral-800">
-                <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
-                <TextInput
-                  value={dropoff}
-                  onChangeText={onDropoffChange}
-                  placeholder="Enter destination"
-                  placeholderTextColor="#525252"
-                  className="flex-1 text-white text-base py-1"
-                />
-              </View>
-            </View>
+            <LocationInput
+              variant="pickup"
+              value={pickup}
+              onChangeText={onPickupChange}
+            />
+            <LocationInput
+              variant="dropoff"
+              value={dropoff}
+              onChangeText={onDropoffChange}
+            />
 
             <Text className="text-neutral-400 text-sm mb-2 ml-1">
               Ride type
             </Text>
             <View className="gap-2">
               {RIDE_OPTIONS.map(({ type, source, minsAway, arrival }) => (
-                <TouchableOpacity
+                <RideTypeCard
                   key={type}
-                  onPress={() => onRideTypeChange(type)}
-                  activeOpacity={0.8}
-                  className={`flex-row items-center rounded-2xl overflow-hidden border ${
-                    rideType === type
-                      ? "bg-violet-600/20 border-violet-500"
-                      : "bg-neutral-900 border-neutral-800"
-                  }`}
-                >
-                  <Image
-                    source={source}
-                    className="w-32 h-24 bg-neutral-800"
-                    resizeMode="contain"
-                  />
-                  <View className="flex-1 ml-4">
-                    <Text
-                      className={`font-semibold text-base ${
-                        rideType === type ? "text-white" : "text-neutral-200"
-                      }`}
-                    >
-                      {type}
-                    </Text>
-                    <Text className="text-neutral-500 text-sm mt-0.5">
-                      {minsAway}
-                    </Text>
-                    <Text className="text-neutral-500 text-sm">
-                      {arrival}
-                    </Text>
-                  </View>
-                  {rideType === type ? (
-                    <View className="w-6 h-6 rounded-full bg-violet-500 items-center justify-center mr-4">
-                      <Text className="text-white text-xs">✓</Text>
-                    </View>
-                  ) : null}
-                </TouchableOpacity>
+                  type={type}
+                  source={source}
+                  minsAway={minsAway}
+                  arrival={arrival}
+                  selected={rideType === type}
+                  onSelect={() => onRideTypeChange(type)}
+                />
               ))}
             </View>
           </View>
