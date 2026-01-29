@@ -12,12 +12,12 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
 } from "react-native";
 import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
 
-type Screen = "home" | "signup" | "signin";
-console.log("app started");
+type Screen = "home" | "signup" | "signin" | "whereto";
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
@@ -27,8 +27,12 @@ export default function App() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [pickup, setPickup] = useState("");
+  const [dropoff, setDropoff] = useState("");
+  const [rideType, setRideType] = useState<
+    "Economy" | "XL" | "Luxury" | "Luxury SUV"
+  >("Economy");
 
-  // Check auth state on mount
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -338,6 +342,141 @@ export default function App() {
     );
   }
 
+  // Where To Screen (pickup / dropoff)
+  if (screen === "whereto") {
+    return (
+      <SafeAreaView className="flex-1 bg-neutral-950">
+        <StatusBar style="light" />
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          className="flex-1"
+        >
+          <ScrollView
+            className="flex-1"
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 16 }}
+            showsVerticalScrollIndicator={false}
+          >
+            <View className="px-5 pt-6">
+              {/* Header */}
+              <View className="flex-row items-center mb-6">
+                <TouchableOpacity
+                  onPress={() => setScreen("home")}
+                  className="w-10 h-10 bg-neutral-900 rounded-full items-center justify-center border border-neutral-800 mr-4"
+                >
+                  <Text className="text-white text-lg">←</Text>
+                </TouchableOpacity>
+                <Text className="text-2xl font-bold text-white">Where to?</Text>
+              </View>
+
+              {/* Pickup */}
+              <View className="mb-4">
+                <Text className="text-neutral-400 text-sm mb-2 ml-1">
+                  Pickup
+                </Text>
+                <View className="bg-neutral-900 rounded-2xl px-5 py-4 flex-row items-center border border-neutral-800">
+                  <View className="w-3 h-3 rounded-full bg-green-500 mr-4" />
+                  <TextInput
+                    value={pickup}
+                    onChangeText={setPickup}
+                    placeholder="Enter pickup location"
+                    placeholderTextColor="#525252"
+                    className="flex-1 text-white text-base py-1"
+                  />
+                </View>
+              </View>
+
+              {/* Dropoff */}
+              <View className="mb-5">
+                <Text className="text-neutral-400 text-sm mb-2 ml-1">
+                  Dropoff
+                </Text>
+                <View className="bg-neutral-900 rounded-2xl px-5 py-4 flex-row items-center border border-neutral-800">
+                  <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
+                  <TextInput
+                    value={dropoff}
+                    onChangeText={setDropoff}
+                    placeholder="Enter destination"
+                    placeholderTextColor="#525252"
+                    className="flex-1 text-white text-base py-1"
+                  />
+                </View>
+              </View>
+
+              {/* Ride type */}
+              <Text className="text-neutral-400 text-sm mb-2 ml-1">
+                Ride type
+              </Text>
+              <View className="gap-2">
+                {(
+                  [
+                    {
+                      type: "Economy" as const,
+                      source: require("./graphics/economy-graphic.png"),
+                    },
+                    {
+                      type: "XL" as const,
+                      source: require("./graphics/xl-graphic.png"),
+                    },
+                    {
+                      type: "Luxury" as const,
+                      source: require("./graphics/lux-sedan-graphic.png"),
+                    },
+                    {
+                      type: "Luxury SUV" as const,
+                      source: require("./graphics/lux-suv-graphic.png"),
+                    },
+                  ] as const
+                ).map(({ type, source }) => (
+                  <TouchableOpacity
+                    key={type}
+                    onPress={() => setRideType(type)}
+                    activeOpacity={0.8}
+                    className={`flex-row items-center rounded-2xl overflow-hidden border ${
+                      rideType === type
+                        ? "bg-violet-600/20 border-violet-500"
+                        : "bg-neutral-900 border-neutral-800"
+                    }`}
+                  >
+                    <Image
+                      source={source}
+                      className="w-32 h-24 bg-neutral-800"
+                      resizeMode="contain"
+                    />
+                    <Text
+                      className={`flex-1 ml-4 font-semibold text-base ${
+                        rideType === type ? "text-white" : "text-neutral-200"
+                      }`}
+                    >
+                      {type}
+                    </Text>
+                    {rideType === type ? (
+                      <View className="w-6 h-6 rounded-full bg-violet-500 items-center justify-center mr-4">
+                        <Text className="text-white text-xs">✓</Text>
+                      </View>
+                    ) : null}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </ScrollView>
+
+          {/* Find rides - fixed at bottom, always visible */}
+          <View className="px-5 pb-4 pt-2 border-t border-neutral-800 bg-neutral-950">
+            <TouchableOpacity
+              onPress={() => setScreen("home")}
+              className="bg-violet-600 rounded-2xl py-4"
+            >
+              <Text className="text-white text-center text-base font-bold">
+                Find rides
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    );
+  }
+
   // Logged In Home Screen
   if (user) {
     return (
@@ -385,7 +524,10 @@ export default function App() {
           </View>
 
           {/* Search / Destination Input */}
-          <TouchableOpacity className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800">
+          <TouchableOpacity
+            onPress={() => setScreen("whereto")}
+            className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800"
+          >
             <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
             <Text className="text-neutral-400 text-base flex-1">Where to?</Text>
             <Text className="text-violet-400">→</Text>
@@ -393,7 +535,10 @@ export default function App() {
 
           {/* Quick Actions */}
           <View className="flex-row gap-3 mb-8">
-            <TouchableOpacity className="flex-1 bg-violet-600 rounded-2xl py-5 items-center">
+            <TouchableOpacity
+              onPress={() => setScreen("whereto")}
+              className="flex-1 bg-violet-600 rounded-2xl py-5 items-center"
+            >
               <Text className="text-xl mb-1">🚗</Text>
               <Text className="text-white font-semibold text-sm">Ride</Text>
             </TouchableOpacity>
@@ -462,7 +607,10 @@ export default function App() {
         </View>
 
         {/* Search / Destination Input */}
-        <TouchableOpacity className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800">
+        <TouchableOpacity
+          onPress={() => setScreen("whereto")}
+          className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800"
+        >
           <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
           <Text className="text-neutral-400 text-base flex-1">Where to?</Text>
           <Text className="text-violet-400">→</Text>
@@ -470,7 +618,10 @@ export default function App() {
 
         {/* Quick Actions */}
         <View className="flex-row gap-3 mb-8">
-          <TouchableOpacity className="flex-1 bg-violet-600 rounded-2xl py-5 items-center">
+          <TouchableOpacity
+            onPress={() => setScreen("whereto")}
+            className="flex-1 bg-violet-600 rounded-2xl py-5 items-center"
+          >
             <Text className="text-xl mb-1">🚗</Text>
             <Text className="text-white font-semibold text-sm">Ride</Text>
           </TouchableOpacity>
