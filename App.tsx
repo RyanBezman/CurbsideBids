@@ -32,7 +32,6 @@ export default function App() {
   const [rideType, setRideType] = useState<
     "Economy" | "XL" | "Luxury" | "Luxury SUV"
   >("Economy");
-
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -42,7 +41,7 @@ export default function App() {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
 
       // Navigate to home when user signs in or signs up
@@ -413,21 +412,29 @@ export default function App() {
                     {
                       type: "Economy" as const,
                       source: require("./graphics/economy-graphic.png"),
+                      minsAway: "3 min away",
+                      arrival: "Arrives ~2:24 PM",
                     },
                     {
                       type: "XL" as const,
                       source: require("./graphics/xl-graphic.png"),
+                      minsAway: "5 min away",
+                      arrival: "Arrives ~2:26 PM",
                     },
                     {
                       type: "Luxury" as const,
                       source: require("./graphics/lux-sedan-graphic.png"),
+                      minsAway: "7 min away",
+                      arrival: "Arrives ~2:28 PM",
                     },
                     {
                       type: "Luxury SUV" as const,
                       source: require("./graphics/lux-suv-graphic.png"),
+                      minsAway: "4 min away",
+                      arrival: "Arrives ~2:25 PM",
                     },
                   ] as const
-                ).map(({ type, source }) => (
+                ).map(({ type, source, minsAway, arrival }) => (
                   <TouchableOpacity
                     key={type}
                     onPress={() => setRideType(type)}
@@ -443,13 +450,21 @@ export default function App() {
                       className="w-32 h-24 bg-neutral-800"
                       resizeMode="contain"
                     />
-                    <Text
-                      className={`flex-1 ml-4 font-semibold text-base ${
-                        rideType === type ? "text-white" : "text-neutral-200"
-                      }`}
-                    >
-                      {type}
-                    </Text>
+                    <View className="flex-1 ml-4">
+                      <Text
+                        className={`font-semibold text-base ${
+                          rideType === type ? "text-white" : "text-neutral-200"
+                        }`}
+                      >
+                        {type}
+                      </Text>
+                      <Text className="text-neutral-500 text-sm mt-0.5">
+                        {minsAway}
+                      </Text>
+                      <Text className="text-neutral-500 text-sm">
+                        {arrival}
+                      </Text>
+                    </View>
                     {rideType === type ? (
                       <View className="w-6 h-6 rounded-full bg-violet-500 items-center justify-center mr-4">
                         <Text className="text-white text-xs">✓</Text>
