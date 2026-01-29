@@ -35,7 +35,11 @@ export function HomeScreenLoggedOut({ onNavigate }: Props) {
         </View>
 
         <TouchableOpacity
-          onPress={() => onNavigate("whereto")}
+          onPress={() => {
+            if (quickAction === "package") onNavigate("package");
+            else if (quickAction === "scheduled") onNavigate("schedule");
+            else onNavigate("whereto");
+          }}
           className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800"
         >
           <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
@@ -65,7 +69,10 @@ export function HomeScreenLoggedOut({ onNavigate }: Props) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setQuickAction("package")}
+            onPress={() => {
+              setQuickAction("package");
+              onNavigate("package");
+            }}
             className={`flex-1 rounded-2xl py-5 items-center border ${
               quickAction === "package"
                 ? "bg-violet-600 border-violet-500"
@@ -82,7 +89,10 @@ export function HomeScreenLoggedOut({ onNavigate }: Props) {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setQuickAction("scheduled")}
+            onPress={() => {
+              setQuickAction("scheduled");
+              onNavigate("schedule");
+            }}
             className={`flex-1 rounded-2xl py-5 items-center border ${
               quickAction === "scheduled"
                 ? "bg-violet-600 border-violet-500"
