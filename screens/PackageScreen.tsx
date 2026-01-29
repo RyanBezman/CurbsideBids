@@ -20,7 +20,7 @@ type Props = {
   onNavigate: (screen: Screen) => void;
 };
 
-const PACKAGE_GRAPHIC = require("../graphics/economy-graphic.png");
+const PACKAGE_GRAPHIC = require("../graphics/package.png");
 
 export function PackageScreen({
   pickup,
