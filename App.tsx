@@ -1,14 +1,16 @@
 import "./global.css";
 import { StatusBar } from "expo-status-bar";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Alert } from "react-native";
 import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
-import type { Screen, RideType } from "./screens";
+import type { Screen, RideType, SchedulePayload } from "./screens";
 import {
   SignUpScreen,
   SignInScreen,
   WhereToScreen,
+  PackageScreen,
+  ScheduleScreen,
   HomeScreenLoggedIn,
   HomeScreenLoggedOut,
 } from "./screens";
@@ -24,6 +26,23 @@ export default function App() {
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
   const [rideType, setRideType] = useState<RideType>("Economy");
+  /** Schedule date/time; held in state for schedule flow and future API submission. */
+  const [scheduleDate, setScheduleDate] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(d.getHours() + 1, 0, 0, 0);
+    return d;
+  });
+
+  /** Schedule form payload; use when submitting to API (e.g. scheduledAt.toISOString()). */
+  const schedulePayload: SchedulePayload = useMemo(
+    () => ({
+      pickup,
+      dropoff,
+      rideType,
+      scheduledAt: scheduleDate,
+    }),
+    [pickup, dropoff, rideType, scheduleDate],
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -143,6 +162,39 @@ export default function App() {
         onDropoffChange={setDropoff}
         onRideTypeChange={setRideType}
         onFindRides={() => onNavigate("home")}
+        onNavigate={onNavigate}
+      />
+    );
+  }
+
+  if (screen === "package") {
+    return (
+      <PackageScreen
+        pickup={pickup}
+        dropoff={dropoff}
+        onPickupChange={setPickup}
+        onDropoffChange={setDropoff}
+        onSendPackage={() => onNavigate("home")}
+        onNavigate={onNavigate}
+      />
+    );
+  }
+
+  if (screen === "schedule") {
+    return (
+      <ScheduleScreen
+        pickup={pickup}
+        dropoff={dropoff}
+        rideType={rideType}
+        scheduleDate={scheduleDate}
+        onPickupChange={setPickup}
+        onDropoffChange={setDropoff}
+        onRideTypeChange={setRideType}
+        onScheduleDateChange={setScheduleDate}
+        onFindRides={() => {
+          // TODO: send schedulePayload to API (e.g. scheduledAt.toISOString())
+          onNavigate("home");
+        }}
         onNavigate={onNavigate}
       />
     );

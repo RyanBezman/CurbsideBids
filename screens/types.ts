@@ -1,3 +1,18 @@
-export type Screen = "home" | "signup" | "signin" | "whereto";
+export type Screen =
+  | "home"
+  | "signup"
+  | "signin"
+  | "whereto"
+  | "package"
+  | "schedule";
 
 export type RideType = "Economy" | "XL" | "Luxury" | "Luxury SUV";
+
+/** Schedule form state held for the schedule flow; ready for API submission. */
+export type SchedulePayload = {
+  pickup: string;
+  dropoff: string;
+  rideType: RideType;
+  /** Selected date/time; use .toISOString() when sending to API. */
+  scheduledAt: Date;
+};

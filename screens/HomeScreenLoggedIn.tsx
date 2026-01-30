@@ -1,7 +1,10 @@
 import { StatusBar } from "expo-status-bar";
+import { useState } from "react";
 import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
 import type { User } from "@supabase/supabase-js";
 import type { Screen } from "./types";
+
+type QuickAction = "rides" | "package" | "scheduled";
 
 type Props = {
   user: User;
@@ -9,11 +12,9 @@ type Props = {
   onNavigate: (screen: Screen) => void;
 };
 
-export function HomeScreenLoggedIn({
-  user,
-  onSignOut,
-  onNavigate,
-}: Props) {
+export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
+  const [quickAction, setQuickAction] = useState<QuickAction>("rides");
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-950">
       <StatusBar style="light" />
@@ -24,9 +25,7 @@ export function HomeScreenLoggedIn({
             <Text className="text-3xl font-bold text-white tracking-tight">
               Curbside
             </Text>
-            <Text className="text-sm text-neutral-500 mt-1">
-              Welcome back!
-            </Text>
+            <Text className="text-sm text-neutral-500 mt-1">Welcome back!</Text>
           </View>
           <TouchableOpacity
             onPress={onSignOut}
@@ -57,7 +56,11 @@ export function HomeScreenLoggedIn({
         </View>
 
         <TouchableOpacity
-          onPress={() => onNavigate("whereto")}
+          onPress={() => {
+            if (quickAction === "package") onNavigate("package");
+            else if (quickAction === "scheduled") onNavigate("schedule");
+            else onNavigate("whereto");
+          }}
           className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800"
         >
           <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
@@ -67,21 +70,62 @@ export function HomeScreenLoggedIn({
 
         <View className="flex-row gap-3 mb-8">
           <TouchableOpacity
-            onPress={() => onNavigate("whereto")}
-            className="flex-1 bg-violet-600 rounded-2xl py-5 items-center"
+            onPress={() => {
+              setQuickAction("rides");
+              onNavigate("whereto");
+            }}
+            className={`flex-1 rounded-2xl py-5 items-center border ${
+              quickAction === "rides"
+                ? "bg-violet-600 border-violet-500"
+                : "bg-neutral-900 border-neutral-800"
+            }`}
           >
             <Text className="text-xl mb-1">🚗</Text>
-            <Text className="text-white font-semibold text-sm">Ride</Text>
+            <Text
+              className={`font-semibold text-sm ${
+                quickAction === "rides" ? "text-white" : "text-neutral-300"
+              }`}
+            >
+              Ride
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 bg-neutral-900 rounded-2xl py-5 items-center border border-neutral-800">
+          <TouchableOpacity
+            onPress={() => {
+              setQuickAction("package");
+              onNavigate("package");
+            }}
+            className={`flex-1 rounded-2xl py-5 items-center border ${
+              quickAction === "package"
+                ? "bg-violet-600 border-violet-500"
+                : "bg-neutral-900 border-neutral-800"
+            }`}
+          >
             <Text className="text-xl mb-1">📦</Text>
-            <Text className="text-neutral-300 font-semibold text-sm">
+            <Text
+              className={`font-semibold text-sm ${
+                quickAction === "package" ? "text-white" : "text-neutral-300"
+              }`}
+            >
               Package
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity className="flex-1 bg-neutral-900 rounded-2xl py-5 items-center border border-neutral-800">
+          <TouchableOpacity
+            onPress={() => {
+              setQuickAction("scheduled");
+              onNavigate("schedule");
+            }}
+            className={`flex-1 rounded-2xl py-5 items-center border ${
+              quickAction === "scheduled"
+                ? "bg-violet-600 border-violet-500"
+                : "bg-neutral-900 border-neutral-800"
+            }`}
+          >
             <Text className="text-xl mb-1">📅</Text>
-            <Text className="text-neutral-300 font-semibold text-sm">
+            <Text
+              className={`font-semibold text-sm ${
+                quickAction === "scheduled" ? "text-white" : "text-neutral-300"
+              }`}
+            >
               Schedule
             </Text>
           </TouchableOpacity>
@@ -90,8 +134,7 @@ export function HomeScreenLoggedIn({
         <View className="bg-neutral-900 rounded-2xl p-4 mb-8 flex-row items-center border border-neutral-800">
           <View className="w-2 h-2 rounded-full bg-green-400 mr-3" />
           <Text className="text-neutral-400 text-sm flex-1">
-            <Text className="text-white font-semibold">247</Text> drivers
-            nearby
+            <Text className="text-white font-semibold">247</Text> drivers nearby
           </Text>
           <Text className="text-violet-400 text-sm font-medium">
             ~3 min pickup

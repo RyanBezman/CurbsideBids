@@ -14,6 +14,8 @@ type Props = {
   arrival: string;
   selected: boolean;
   onSelect: () => void;
+  /** Override displayed label (e.g. "Package") instead of type */
+  label?: string;
 };
 
 export function RideTypeCard({
@@ -23,7 +25,10 @@ export function RideTypeCard({
   arrival,
   selected,
   onSelect,
+  label,
 }: Props) {
+  const displayLabel = label ?? type;
+
   return (
     <TouchableOpacity
       onPress={onSelect}
@@ -45,7 +50,7 @@ export function RideTypeCard({
             selected ? "text-white" : "text-neutral-200"
           }`}
         >
-          {type}
+          {displayLabel}
         </Text>
         <Text className="text-neutral-500 text-sm mt-0.5">{minsAway}</Text>
         <Text className="text-neutral-500 text-sm">{arrival}</Text>
