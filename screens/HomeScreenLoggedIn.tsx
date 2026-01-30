@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
-  const [quickAction, setQuickAction] = useState<QuickAction>("rides");
+  const [quickAction, setQuickAction] = useState<QuickAction | null>(null);
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-950">
@@ -62,6 +62,7 @@ export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
             else onNavigate("whereto");
           }}
           className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800"
+          activeOpacity={0.8}
         >
           <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
           <Text className="text-neutral-400 text-base flex-1">Where to?</Text>
@@ -74,6 +75,7 @@ export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
               setQuickAction("rides");
               onNavigate("whereto");
             }}
+            activeOpacity={0.8}
             className={`flex-1 rounded-2xl py-5 items-center border ${
               quickAction === "rides"
                 ? "bg-violet-600 border-violet-500"
@@ -94,6 +96,7 @@ export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
               setQuickAction("package");
               onNavigate("package");
             }}
+            activeOpacity={0.8}
             className={`flex-1 rounded-2xl py-5 items-center border ${
               quickAction === "package"
                 ? "bg-violet-600 border-violet-500"
@@ -114,6 +117,7 @@ export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
               setQuickAction("scheduled");
               onNavigate("schedule");
             }}
+            activeOpacity={0.8}
             className={`flex-1 rounded-2xl py-5 items-center border ${
               quickAction === "scheduled"
                 ? "bg-violet-600 border-violet-500"
