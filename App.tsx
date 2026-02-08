@@ -2,6 +2,7 @@ import "./global.css";
 import { StatusBar } from "expo-status-bar";
 import { useState, useEffect, useMemo } from "react";
 import { Alert } from "react-native";
+import { formatPhoneForDisplay, normalizePhoneInput } from "./lib/phone";
 import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
 import type { Screen, RideType, SchedulePayload } from "./screens";
@@ -43,6 +44,7 @@ export default function App() {
     }),
     [pickup, dropoff, rideType, scheduleDate],
   );
+  const phoneDisplayValue = useMemo(() => formatPhoneForDisplay(phone), [phone]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -118,6 +120,10 @@ export default function App() {
     setScreen("home");
   };
 
+  const handlePhoneChange = (value: string) => {
+    setPhone(normalizePhoneInput(value));
+  };
+
   const onNavigate = (next: Screen) => setScreen(next);
 
   if (screen === "signup") {
@@ -125,12 +131,12 @@ export default function App() {
       <SignUpScreen
         name={name}
         email={email}
-        phone={phone}
+        phone={phoneDisplayValue}
         password={password}
         loading={loading}
         onNameChange={setName}
         onEmailChange={setEmail}
-        onPhoneChange={setPhone}
+        onPhoneChange={handlePhoneChange}
         onPasswordChange={setPassword}
         onSignUp={handleSignUp}
         onNavigate={onNavigate}
