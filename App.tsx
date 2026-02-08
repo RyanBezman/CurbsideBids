@@ -110,6 +110,7 @@ export default function App() {
     }),
     [pickup, dropoff, rideType, scheduleDate],
   );
+  const phoneDisplayValue = useMemo(() => formatPhoneForDisplay(phone), [phone]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -230,12 +231,12 @@ export default function App() {
       <SignUpScreen
         name={name}
         email={email}
-        phone={phone}
+        phone={phoneDisplayValue}
         password={password}
         loading={loading}
         onNameChange={setName}
         onEmailChange={setEmail}
-        onPhoneChange={setPhone}
+        onPhoneChange={handlePhoneChange}
         onPasswordChange={setPassword}
         onSignUp={handleSignUp}
         onNavigate={onNavigate}
