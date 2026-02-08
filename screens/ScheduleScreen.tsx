@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { LocationInput, RideTypeCard } from "../components";
+import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen, RideType } from "./types";
 
 const RIDE_OPTIONS = [
@@ -39,6 +40,7 @@ const RIDE_OPTIONS = [
     arrival: "Arrives ~2:25 PM",
   },
 ] as const;
+const RIDE_ASSET_MODULES = RIDE_OPTIONS.map(({ source }) => source as number);
 
 function formatScheduleDatetime(d: Date): string {
   const date = d.toLocaleDateString("en-US", {
@@ -82,6 +84,9 @@ export function ScheduleScreen({
   onNavigate,
 }: ScheduleScreenProps) {
   const [showPicker, setShowPicker] = useState(false);
+  const isRideTypeLoading = useEntryLoading({
+    assetModules: RIDE_ASSET_MODULES,
+  });
 
   const handlePickerChange = (
     event: { type: string },
@@ -185,17 +190,30 @@ export function ScheduleScreen({
               Ride type
             </Text>
             <View className="gap-2">
-              {RIDE_OPTIONS.map(({ type, source, minsAway, arrival }) => (
-                <RideTypeCard
-                  key={type}
-                  type={type}
-                  source={source}
-                  minsAway={minsAway}
-                  arrival={arrival}
-                  selected={rideType === type}
-                  onSelect={() => onRideTypeChange(type)}
-                />
-              ))}
+              {isRideTypeLoading
+                ? RIDE_OPTIONS.map(({ type, source }) => (
+                    <RideTypeCard
+                      key={`${type}-skeleton`}
+                      type={type}
+                      source={source}
+                      minsAway=""
+                      arrival=""
+                      selected={false}
+                      onSelect={() => {}}
+                      loading
+                    />
+                  ))
+                : RIDE_OPTIONS.map(({ type, source, minsAway, arrival }) => (
+                    <RideTypeCard
+                      key={type}
+                      type={type}
+                      source={source}
+                      minsAway={minsAway}
+                      arrival={arrival}
+                      selected={rideType === type}
+                      onSelect={() => onRideTypeChange(type)}
+                    />
+                  ))}
             </View>
           </View>
         </ScrollView>

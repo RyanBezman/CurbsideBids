@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { LocationInput, RideTypeCard } from "../components";
+import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen } from "./types";
 
 type Props = {
@@ -22,6 +23,7 @@ type Props = {
 };
 
 const PACKAGE_GRAPHIC = require("../graphics/package.png");
+const PACKAGE_ASSET_MODULES = [PACKAGE_GRAPHIC] as const;
 
 export function PackageScreen({
   pickup,
@@ -32,6 +34,10 @@ export function PackageScreen({
   onSendPackage,
   onNavigate,
 }: Props) {
+  const isRideTypeLoading = useEntryLoading({
+    assetModules: PACKAGE_ASSET_MODULES,
+  });
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-950">
       <StatusBar style="light" />
@@ -77,11 +83,12 @@ export function PackageScreen({
               <RideTypeCard
                 type="Economy"
                 source={PACKAGE_GRAPHIC}
-                minsAway="15 min away"
-                arrival="Est. delivery ~3:15 PM"
-                selected
+                minsAway={isRideTypeLoading ? "" : "15 min away"}
+                arrival={isRideTypeLoading ? "" : "Est. delivery ~3:15 PM"}
+                selected={!isRideTypeLoading}
                 onSelect={() => {}}
                 label="Package"
+                loading={isRideTypeLoading}
               />
             </View>
           </View>

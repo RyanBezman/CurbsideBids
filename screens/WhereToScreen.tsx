@@ -9,6 +9,7 @@ import {
   ScrollView,
 } from "react-native";
 import { LocationInput, RideTypeCard } from "../components";
+import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen, RideType } from "./types";
 
 const RIDE_OPTIONS = [
@@ -37,6 +38,7 @@ const RIDE_OPTIONS = [
     arrival: "Arrives ~2:25 PM",
   },
 ] as const;
+const RIDE_ASSET_MODULES = RIDE_OPTIONS.map(({ source }) => source as number);
 
 type Props = {
   pickup: string;
@@ -61,6 +63,10 @@ export function WhereToScreen({
   onFindRides,
   onNavigate,
 }: Props) {
+  const isRideTypeLoading = useEntryLoading({
+    assetModules: RIDE_ASSET_MODULES,
+  });
+
   return (
     <SafeAreaView className="flex-1 bg-neutral-950">
       <StatusBar style="light" />
@@ -101,17 +107,30 @@ export function WhereToScreen({
               Ride type
             </Text>
             <View className="gap-2">
-              {RIDE_OPTIONS.map(({ type, source, minsAway, arrival }) => (
-                <RideTypeCard
-                  key={type}
-                  type={type}
-                  source={source}
-                  minsAway={minsAway}
-                  arrival={arrival}
-                  selected={rideType === type}
-                  onSelect={() => onRideTypeChange(type)}
-                />
-              ))}
+              {isRideTypeLoading
+                ? RIDE_OPTIONS.map(({ type, source }) => (
+                    <RideTypeCard
+                      key={`${type}-skeleton`}
+                      type={type}
+                      source={source}
+                      minsAway=""
+                      arrival=""
+                      selected={false}
+                      onSelect={() => {}}
+                      loading
+                    />
+                  ))
+                : RIDE_OPTIONS.map(({ type, source, minsAway, arrival }) => (
+                    <RideTypeCard
+                      key={type}
+                      type={type}
+                      source={source}
+                      minsAway={minsAway}
+                      arrival={arrival}
+                      selected={rideType === type}
+                      onSelect={() => onRideTypeChange(type)}
+                    />
+                  ))}
             </View>
           </View>
         </ScrollView>
