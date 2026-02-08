@@ -1,8 +1,15 @@
 import "./global.css";
-import { StatusBar } from "expo-status-bar";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Alert, Linking } from "react-native";
 import * as Location from "expo-location";
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from "@react-navigation/native";
+import {
+  createNativeStackNavigator,
+  type NativeStackNavigationOptions,
+} from "@react-navigation/native-stack";
 import { formatPhoneForDisplay, normalizePhoneInput } from "./lib/phone";
 import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -16,6 +23,18 @@ import {
   HomeScreenLoggedIn,
   HomeScreenLoggedOut,
 } from "./screens";
+
+type RootStackParamList = {
+  home: undefined;
+  signup: undefined;
+  signin: undefined;
+  whereto: undefined;
+  package: undefined;
+  schedule: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 function isRideRequestScreen(screen: Screen): boolean {
   return screen === "whereto" || screen === "package" || screen === "schedule";
@@ -81,7 +100,6 @@ async function ensureForegroundLocationPermission(): Promise<boolean> {
 }
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>("home");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -122,8 +140,12 @@ export default function App() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        setScreen("home");
+
+      if (navigationRef.isReady()) {
+        navigationRef.resetRoot({
+          index: 0,
+          routes: [{ name: "home" }],
+        });
       }
     });
 
@@ -154,7 +176,7 @@ export default function App() {
       Alert.alert(
         "Check your email",
         "Please check your email to confirm your account before signing in.",
-        [{ text: "OK", onPress: () => setScreen("signin") }],
+        [{ text: "OK", onPress: () => onNavigate("signin") }],
       );
       setName("");
       setEmail("");
@@ -184,7 +206,7 @@ export default function App() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    setScreen("home");
+    onNavigate("home");
   };
 
   const handlePhoneChange = (value: string) => {
@@ -224,111 +246,132 @@ export default function App() {
   };
 
   const onNavigate = (next: Screen) => {
-    setScreen(next);
-
     if (isRideRequestScreen(next) && pickup.trim().length === 0) {
       void fillPickupFromCurrentLocation();
     }
+
+    if (!navigationRef.isReady()) return;
+
+    if (next === "home") {
+      navigationRef.resetRoot({
+        index: 0,
+        routes: [{ name: "home" }],
+      });
+      return;
+    }
+
+    navigationRef.navigate(next);
   };
 
-  if (screen === "signup") {
-    return (
-      <SignUpScreen
-        name={name}
-        email={email}
-        phone={phoneDisplayValue}
-        password={password}
-        loading={loading}
-        onNameChange={setName}
-        onEmailChange={setEmail}
-        onPhoneChange={handlePhoneChange}
-        onPasswordChange={setPassword}
-        onSignUp={handleSignUp}
-        onNavigate={onNavigate}
-      />
-    );
-  }
+  const sharedStackOptions: NativeStackNavigationOptions = {
+    headerShown: false,
+    animation: "slide_from_right",
+    gestureEnabled: true,
+    fullScreenGestureEnabled: true,
+  };
 
-  if (screen === "signin") {
-    return (
-      <SignInScreen
-        email={email}
-        password={password}
-        loading={loading}
-        onEmailChange={setEmail}
-        onPasswordChange={setPassword}
-        onSignIn={handleSignIn}
-        onNavigate={onNavigate}
-      />
-    );
-  }
-
-  if (screen === "whereto") {
-    return (
-      <WhereToScreen
-        pickup={pickup}
-        pickupPlaceholder={
-          isResolvingPickupLocation ? "Detecting current location..." : undefined
-        }
-        dropoff={dropoff}
-        rideType={rideType}
-        onPickupChange={setPickup}
-        onDropoffChange={setDropoff}
-        onRideTypeChange={setRideType}
-        onFindRides={() => onNavigate("home")}
-        onNavigate={onNavigate}
-      />
-    );
-  }
-
-  if (screen === "package") {
-    return (
-      <PackageScreen
-        pickup={pickup}
-        pickupPlaceholder={
-          isResolvingPickupLocation ? "Detecting current location..." : undefined
-        }
-        dropoff={dropoff}
-        onPickupChange={setPickup}
-        onDropoffChange={setDropoff}
-        onSendPackage={() => onNavigate("home")}
-        onNavigate={onNavigate}
-      />
-    );
-  }
-
-  if (screen === "schedule") {
-    return (
-      <ScheduleScreen
-        pickup={pickup}
-        pickupPlaceholder={
-          isResolvingPickupLocation ? "Detecting current location..." : undefined
-        }
-        dropoff={dropoff}
-        rideType={rideType}
-        scheduleDate={scheduleDate}
-        onPickupChange={setPickup}
-        onDropoffChange={setDropoff}
-        onRideTypeChange={setRideType}
-        onScheduleDateChange={setScheduleDate}
-        onFindRides={() => {
-          // TODO: send schedulePayload to API (e.g. scheduledAt.toISOString())
-          onNavigate("home");
-        }}
-        onNavigate={onNavigate}
-      />
-    );
-  }
-
-  if (user) {
-    return (
-      <HomeScreenLoggedIn
-        user={user}
-        onSignOut={handleSignOut}
-        onNavigate={onNavigate}
-      />
-    );
-  }
-
-  return <HomeScreenLoggedOut onNavigate={onNavigate} />;
+  return (
+    <NavigationContainer ref={navigationRef}>
+      <Stack.Navigator initialRouteName="home" screenOptions={sharedStackOptions}>
+        <Stack.Screen name="home">
+          {() =>
+            user ? (
+              <HomeScreenLoggedIn
+                user={user}
+                onSignOut={handleSignOut}
+                onNavigate={onNavigate}
+              />
+            ) : (
+              <HomeScreenLoggedOut onNavigate={onNavigate} />
+            )
+          }
+        </Stack.Screen>
+        <Stack.Screen name="signup">
+          {() => (
+            <SignUpScreen
+              name={name}
+              email={email}
+              phone={phoneDisplayValue}
+              password={password}
+              loading={loading}
+              onNameChange={setName}
+              onEmailChange={setEmail}
+              onPhoneChange={handlePhoneChange}
+              onPasswordChange={setPassword}
+              onSignUp={handleSignUp}
+              onNavigate={onNavigate}
+            />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="signin">
+          {() => (
+            <SignInScreen
+              email={email}
+              password={password}
+              loading={loading}
+              onEmailChange={setEmail}
+              onPasswordChange={setPassword}
+              onSignIn={handleSignIn}
+              onNavigate={onNavigate}
+            />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="whereto">
+          {() => (
+            <WhereToScreen
+              pickup={pickup}
+              pickupPlaceholder={
+                isResolvingPickupLocation ? "Detecting current location..." : undefined
+              }
+              dropoff={dropoff}
+              rideType={rideType}
+              onPickupChange={setPickup}
+              onDropoffChange={setDropoff}
+              onRideTypeChange={setRideType}
+              onFindRides={() => onNavigate("home")}
+              onNavigate={onNavigate}
+            />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="package">
+          {() => (
+            <PackageScreen
+              pickup={pickup}
+              pickupPlaceholder={
+                isResolvingPickupLocation ? "Detecting current location..." : undefined
+              }
+              dropoff={dropoff}
+              onPickupChange={setPickup}
+              onDropoffChange={setDropoff}
+              onSendPackage={() => onNavigate("home")}
+              onNavigate={onNavigate}
+            />
+          )}
+        </Stack.Screen>
+        <Stack.Screen name="schedule">
+          {() => (
+            <ScheduleScreen
+              pickup={pickup}
+              pickupPlaceholder={
+                isResolvingPickupLocation ? "Detecting current location..." : undefined
+              }
+              dropoff={dropoff}
+              rideType={rideType}
+              scheduleDate={scheduleDate}
+              onPickupChange={setPickup}
+              onDropoffChange={setDropoff}
+              onRideTypeChange={setRideType}
+              onScheduleDateChange={setScheduleDate}
+              onFindRides={() => {
+                // TODO: send schedulePayload to API (e.g. scheduledAt.toISOString())
+                void schedulePayload;
+                onNavigate("home");
+              }}
+              onNavigate={onNavigate}
+            />
+          )}
+        </Stack.Screen>
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 }
