@@ -1,4 +1,4 @@
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, Platform } from "react-native";
 
 type Variant = "pickup" | "dropoff";
 
@@ -44,14 +44,22 @@ export function LocationInput({
       <Text className="text-neutral-400 text-sm mb-2 ml-1">
         {label ?? defaultLabel}
       </Text>
-      <View className="bg-neutral-900 rounded-2xl px-5 py-4 flex-row items-center border border-neutral-800">
+      <View className="bg-neutral-900 rounded-2xl px-5 flex-row items-center border border-neutral-800">
         <View className={`w-3 h-3 rounded-full ${dotClass} mr-4`} />
         <TextInput
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder ?? defaultPlaceholder}
           placeholderTextColor="#525252"
-          className="flex-1 text-white text-base py-1"
+          className="flex-1 text-white text-base"
+          style={{
+            height: 56,
+            fontSize: 16,
+            paddingVertical: 0,
+            ...(Platform.OS === "android" && {
+              textAlignVertical: "center",
+            }),
+          }}
         />
       </View>
     </View>

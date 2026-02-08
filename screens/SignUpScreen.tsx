@@ -70,7 +70,15 @@ export function SignUpScreen({
                   onChangeText={onNameChange}
                   placeholder="John Doe"
                   placeholderTextColor="#525252"
-                  className="bg-neutral-900 rounded-2xl px-5 py-4 text-white text-base border border-neutral-800"
+                  className="bg-neutral-900 rounded-2xl px-5 text-white text-base border border-neutral-800"
+                  style={{
+                    height: 56,
+                    fontSize: 16,
+                    paddingVertical: 0,
+                    ...(Platform.OS === "android" && {
+                      textAlignVertical: "center",
+                    }),
+                  }}
                 />
               </View>
               <View>
@@ -84,7 +92,15 @@ export function SignUpScreen({
                   placeholderTextColor="#525252"
                   keyboardType="email-address"
                   autoCapitalize="none"
-                  className="bg-neutral-900 rounded-2xl px-5 py-4 text-white text-base border border-neutral-800"
+                  className="bg-neutral-900 rounded-2xl px-5 text-white text-base border border-neutral-800"
+                  style={{
+                    height: 56,
+                    fontSize: 16,
+                    paddingVertical: 0,
+                    ...(Platform.OS === "android" && {
+                      textAlignVertical: "center",
+                    }),
+                  }}
                 />
               </View>
               <View>
@@ -97,7 +113,15 @@ export function SignUpScreen({
                   placeholder="(555) 123-4567"
                   placeholderTextColor="#525252"
                   keyboardType="phone-pad"
-                  className="bg-neutral-900 rounded-2xl px-5 py-4 text-white text-base border border-neutral-800"
+                  className="bg-neutral-900 rounded-2xl px-5 text-white text-base border border-neutral-800"
+                  style={{
+                    height: 56,
+                    fontSize: 16,
+                    paddingVertical: 0,
+                    ...(Platform.OS === "android" && {
+                      textAlignVertical: "center",
+                    }),
+                  }}
                 />
               </View>
               <View>
@@ -110,7 +134,15 @@ export function SignUpScreen({
                   placeholder="Create a password"
                   placeholderTextColor="#525252"
                   secureTextEntry
-                  className="bg-neutral-900 rounded-2xl px-5 py-4 text-white text-base border border-neutral-800"
+                  className="bg-neutral-900 rounded-2xl px-5 text-white text-base border border-neutral-800"
+                  style={{
+                    height: 56,
+                    fontSize: 16,
+                    paddingVertical: 0,
+                    ...(Platform.OS === "android" && {
+                      textAlignVertical: "center",
+                    }),
+                  }}
                 />
               </View>
             </View>
