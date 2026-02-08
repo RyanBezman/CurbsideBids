@@ -41,7 +41,7 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!serviceRoleKey) {
   console.error(
-    "Missing SUPABASE_SERVICE_ROLE_KEY. Set it in your shell before running npm run seed."
+    "Missing SUPABASE_SERVICE_ROLE_KEY. Set it in .env.local/.env or your shell before running npm run seed."
   );
   process.exit(1);
 }
@@ -126,6 +126,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("Seed failed:", error.message || error);
+  console.error("Seed failed:", error?.message || error);
   process.exit(1);
 });
