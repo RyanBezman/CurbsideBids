@@ -3,6 +3,7 @@ import { StatusBar } from "expo-status-bar";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Alert, Linking } from "react-native";
 import * as Location from "expo-location";
+import { formatPhoneForDisplay, normalizePhoneInput } from "./lib/phone";
 import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
 import type { Screen, RideType, SchedulePayload } from "./screens";
@@ -184,6 +185,10 @@ export default function App() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setScreen("home");
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setPhone(normalizePhoneInput(value));
   };
 
   const fillPickupFromCurrentLocation = async () => {
