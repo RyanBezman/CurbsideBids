@@ -2,13 +2,17 @@ import { StatusBar } from "expo-status-bar";
 import {
   View,
   Text,
-  TouchableOpacity,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from "react-native";
-import { LocationInput, RideTypeCard } from "../components";
+import {
+  BottomActionButton,
+  BackTitleHeader,
+  LocationInput,
+  RideTypeCard,
+} from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen } from "./types";
 
@@ -52,17 +56,7 @@ export function PackageScreen({
           showsVerticalScrollIndicator={false}
         >
           <View className="px-5 pt-6">
-            <View className="flex-row items-center mb-6">
-              <TouchableOpacity
-                onPress={() => onNavigate("home")}
-                className="w-10 h-10 bg-neutral-900 rounded-full items-center justify-center border border-neutral-800 mr-4"
-              >
-                <Text className="text-white text-lg">←</Text>
-              </TouchableOpacity>
-              <Text className="text-2xl font-bold text-white">
-                Send package
-              </Text>
-            </View>
+            <BackTitleHeader title="Send package" onBack={() => onNavigate("home")} />
 
             <LocationInput
               variant="pickup"
@@ -94,16 +88,7 @@ export function PackageScreen({
           </View>
         </ScrollView>
 
-        <View className="px-5 pb-4 pt-2 border-t border-neutral-800 bg-neutral-950">
-          <TouchableOpacity
-            onPress={onSendPackage}
-            className="bg-violet-600 rounded-2xl py-4"
-          >
-            <Text className="text-white text-center text-base font-bold">
-              Find delivery
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <BottomActionButton label="Find delivery" onPress={onSendPackage} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

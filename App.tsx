@@ -119,17 +119,10 @@ export default function App() {
     return d;
   });
 
-  /** Schedule form payload; use when submitting to API (e.g. scheduledAt.toISOString()). */
-  const schedulePayload: SchedulePayload = useMemo(
-    () => ({
-      pickup,
-      dropoff,
-      rideType,
-      scheduledAt: scheduleDate,
-    }),
-    [pickup, dropoff, rideType, scheduleDate],
-  );
   const phoneDisplayValue = useMemo(() => formatPhoneForDisplay(phone), [phone]);
+  const pickupPlaceholder = isResolvingPickupLocation
+    ? "Detecting current location..."
+    : undefined;
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -263,6 +256,18 @@ export default function App() {
     navigationRef.navigate(next);
   };
 
+  const handleScheduleFindRides = () => {
+    // Keep this payload construction close to submit action for easy API integration.
+    const schedulePayload: SchedulePayload = {
+      pickup,
+      dropoff,
+      rideType,
+      scheduledAt: scheduleDate,
+    };
+    void schedulePayload;
+    onNavigate("home");
+  };
+
   const sharedStackOptions: NativeStackNavigationOptions = {
     headerShown: false,
     animation: "slide_from_right",
@@ -320,9 +325,7 @@ export default function App() {
           {() => (
             <WhereToScreen
               pickup={pickup}
-              pickupPlaceholder={
-                isResolvingPickupLocation ? "Detecting current location..." : undefined
-              }
+              pickupPlaceholder={pickupPlaceholder}
               dropoff={dropoff}
               rideType={rideType}
               onPickupChange={setPickup}
@@ -337,9 +340,7 @@ export default function App() {
           {() => (
             <PackageScreen
               pickup={pickup}
-              pickupPlaceholder={
-                isResolvingPickupLocation ? "Detecting current location..." : undefined
-              }
+              pickupPlaceholder={pickupPlaceholder}
               dropoff={dropoff}
               onPickupChange={setPickup}
               onDropoffChange={setDropoff}
@@ -352,9 +353,7 @@ export default function App() {
           {() => (
             <ScheduleScreen
               pickup={pickup}
-              pickupPlaceholder={
-                isResolvingPickupLocation ? "Detecting current location..." : undefined
-              }
+              pickupPlaceholder={pickupPlaceholder}
               dropoff={dropoff}
               rideType={rideType}
               scheduleDate={scheduleDate}
@@ -362,11 +361,7 @@ export default function App() {
               onDropoffChange={setDropoff}
               onRideTypeChange={setRideType}
               onScheduleDateChange={setScheduleDate}
-              onFindRides={() => {
-                // TODO: send schedulePayload to API (e.g. scheduledAt.toISOString())
-                void schedulePayload;
-                onNavigate("home");
-              }}
+              onFindRides={handleScheduleFindRides}
               onNavigate={onNavigate}
             />
           )}
