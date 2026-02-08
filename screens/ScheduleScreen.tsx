@@ -8,6 +8,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import {
@@ -15,6 +17,7 @@ import {
   BackTitleHeader,
   LocationInput,
   RideTypeCard,
+  KeyboardDoneAccessory,
 } from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen, RideType } from "./types";
@@ -87,26 +90,33 @@ export function ScheduleScreen({
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         className="flex-1"
       >
+        <KeyboardDoneAccessory nativeID="schedule-keyboard-done" />
         <ScrollView
           className="flex-1"
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
         >
-          <View className="px-5 pt-6">
-            <BackTitleHeader title="Schedule ride" onBack={() => onNavigate("home")} />
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View className="px-5 pt-6">
+              <BackTitleHeader title="Schedule ride" onBack={() => onNavigate("home")} />
 
-            <LocationInput
-              variant="pickup"
-              value={pickup}
-              placeholder={pickupPlaceholder}
-              onChangeText={onPickupChange}
-            />
-            <LocationInput
-              variant="dropoff"
-              value={dropoff}
-              onChangeText={onDropoffChange}
-            />
+              <LocationInput
+                variant="pickup"
+                value={pickup}
+                placeholder={pickupPlaceholder}
+                onChangeText={onPickupChange}
+                inputAccessoryViewID="schedule-keyboard-done"
+              />
+              <LocationInput
+                variant="dropoff"
+                value={dropoff}
+                onChangeText={onDropoffChange}
+                inputAccessoryViewID="schedule-keyboard-done"
+              />
 
             <Text className="text-neutral-400 text-sm mb-2 ml-1">
               Date & time
@@ -183,7 +193,8 @@ export function ScheduleScreen({
                     />
                   ))}
             </View>
-          </View>
+            </View>
+          </TouchableWithoutFeedback>
         </ScrollView>
 
         <BottomActionButton label="Find rides" onPress={onFindRides} />

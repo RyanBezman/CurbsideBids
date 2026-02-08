@@ -6,12 +6,15 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from "react-native";
 import {
   BottomActionButton,
   BackTitleHeader,
   LocationInput,
   RideTypeCard,
+  KeyboardDoneAccessory,
 } from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen } from "./types";
@@ -52,23 +55,29 @@ export function PackageScreen({
         <ScrollView
           className="flex-1"
           keyboardShouldPersistTaps="handled"
+          keyboardDismissMode={
+            Platform.OS === "ios" ? "interactive" : "on-drag"
+          }
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
         >
-          <View className="px-5 pt-6">
-            <BackTitleHeader title="Send package" onBack={() => onNavigate("home")} />
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View className="px-5 pt-6">
+              <BackTitleHeader title="Send package" onBack={() => onNavigate("home")} />
 
-            <LocationInput
-              variant="pickup"
-              value={pickup}
-              placeholder={pickupPlaceholder}
-              onChangeText={onPickupChange}
-            />
-            <LocationInput
-              variant="dropoff"
-              value={dropoff}
-              onChangeText={onDropoffChange}
-            />
+              <LocationInput
+                variant="pickup"
+                value={pickup}
+                placeholder={pickupPlaceholder}
+                onChangeText={onPickupChange}
+                inputAccessoryViewID="package-keyboard-done"
+              />
+              <LocationInput
+                variant="dropoff"
+                value={dropoff}
+                onChangeText={onDropoffChange}
+                inputAccessoryViewID="package-keyboard-done"
+              />
 
             <Text className="text-neutral-400 text-sm mb-2 ml-1">
               Package delivery
@@ -85,9 +94,11 @@ export function PackageScreen({
                 loading={isRideTypeLoading}
               />
             </View>
-          </View>
+            </View>
+          </TouchableWithoutFeedback>
         </ScrollView>
 
+        <KeyboardDoneAccessory nativeID="package-keyboard-done" />
         <BottomActionButton label="Find delivery" onPress={onSendPackage} />
       </KeyboardAvoidingView>
     </SafeAreaView>

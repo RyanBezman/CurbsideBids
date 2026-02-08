@@ -8,6 +8,8 @@ type Props = {
   onChangeText: (v: string) => void;
   label?: string;
   placeholder?: string;
+  /** iOS: nativeID for InputAccessoryView (Done bar above keyboard) */
+  inputAccessoryViewID?: string;
 };
 
 const VARIANTS: Record<
@@ -32,6 +34,7 @@ export function LocationInput({
   onChangeText,
   label,
   placeholder,
+  inputAccessoryViewID,
 }: Props) {
   const {
     label: defaultLabel,
@@ -51,6 +54,11 @@ export function LocationInput({
           onChangeText={onChangeText}
           placeholder={placeholder ?? defaultPlaceholder}
           placeholderTextColor="#525252"
+          returnKeyType="done"
+          blurOnSubmit
+          inputAccessoryViewID={
+            Platform.OS === "ios" ? inputAccessoryViewID : undefined
+          }
           className="flex-1 text-white text-base"
           style={{
             height: 56,
