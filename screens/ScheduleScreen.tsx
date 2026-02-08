@@ -56,6 +56,7 @@ function formatScheduleDatetime(d: Date): string {
 
 type ScheduleScreenProps = {
   pickup: string;
+  pickupPlaceholder?: string;
   dropoff: string;
   rideType: RideType;
   scheduleDate: Date;
@@ -69,6 +70,7 @@ type ScheduleScreenProps = {
 
 export function ScheduleScreen({
   pickup,
+  pickupPlaceholder,
   dropoff,
   rideType,
   scheduleDate,
@@ -124,6 +126,7 @@ export function ScheduleScreen({
             <LocationInput
               variant="pickup"
               value={pickup}
+              placeholder={pickupPlaceholder}
               onChangeText={onPickupChange}
             />
             <LocationInput

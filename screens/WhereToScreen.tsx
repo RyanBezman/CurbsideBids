@@ -40,6 +40,7 @@ const RIDE_OPTIONS = [
 
 type Props = {
   pickup: string;
+  pickupPlaceholder?: string;
   dropoff: string;
   rideType: RideType;
   onPickupChange: (v: string) => void;
@@ -51,6 +52,7 @@ type Props = {
 
 export function WhereToScreen({
   pickup,
+  pickupPlaceholder,
   dropoff,
   rideType,
   onPickupChange,
@@ -86,6 +88,7 @@ export function WhereToScreen({
             <LocationInput
               variant="pickup"
               value={pickup}
+              placeholder={pickupPlaceholder}
               onChangeText={onPickupChange}
             />
             <LocationInput

@@ -13,6 +13,7 @@ import type { Screen } from "./types";
 
 type Props = {
   pickup: string;
+  pickupPlaceholder?: string;
   dropoff: string;
   onPickupChange: (v: string) => void;
   onDropoffChange: (v: string) => void;
@@ -24,6 +25,7 @@ const PACKAGE_GRAPHIC = require("../graphics/package.png");
 
 export function PackageScreen({
   pickup,
+  pickupPlaceholder,
   dropoff,
   onPickupChange,
   onDropoffChange,
@@ -59,6 +61,7 @@ export function PackageScreen({
             <LocationInput
               variant="pickup"
               value={pickup}
+              placeholder={pickupPlaceholder}
               onChangeText={onPickupChange}
             />
             <LocationInput
