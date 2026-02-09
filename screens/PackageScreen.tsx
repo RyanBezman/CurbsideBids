@@ -13,6 +13,7 @@ import {
   BottomActionButton,
   BackTitleHeader,
   LocationInput,
+  LocationAutocompleteInput,
   RideTypeCard,
   KeyboardDoneAccessory,
 } from "../components";
@@ -72,7 +73,7 @@ export function PackageScreen({
                 onChangeText={onPickupChange}
                 inputAccessoryViewID="package-keyboard-done"
               />
-              <LocationInput
+              <LocationAutocompleteInput
                 variant="dropoff"
                 value={dropoff}
                 onChangeText={onDropoffChange}

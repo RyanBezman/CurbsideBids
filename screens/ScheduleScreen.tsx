@@ -16,6 +16,7 @@ import {
   BottomActionButton,
   BackTitleHeader,
   LocationInput,
+  LocationAutocompleteInput,
   RideTypeCard,
   KeyboardDoneAccessory,
 } from "../components";
@@ -111,7 +112,7 @@ export function ScheduleScreen({
                 onChangeText={onPickupChange}
                 inputAccessoryViewID="schedule-keyboard-done"
               />
-              <LocationInput
+              <LocationAutocompleteInput
                 variant="dropoff"
                 value={dropoff}
                 onChangeText={onDropoffChange}

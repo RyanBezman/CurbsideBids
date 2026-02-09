@@ -10,6 +10,9 @@ type Props = {
   placeholder?: string;
   /** iOS: nativeID for InputAccessoryView (Done bar above keyboard) */
   inputAccessoryViewID?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
+  editable?: boolean;
 };
 
 const VARIANTS: Record<
@@ -35,6 +38,9 @@ export function LocationInput({
   label,
   placeholder,
   inputAccessoryViewID,
+  onFocus,
+  onBlur,
+  editable = true,
 }: Props) {
   const {
     label: defaultLabel,
@@ -52,6 +58,9 @@ export function LocationInput({
         <TextInput
           value={value}
           onChangeText={onChangeText}
+          onFocus={onFocus}
+          onBlur={onBlur}
+          editable={editable}
           placeholder={placeholder ?? defaultPlaceholder}
           placeholderTextColor="#525252"
           returnKeyType="done"
