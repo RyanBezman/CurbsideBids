@@ -3,12 +3,15 @@ import { ActivityIndicator, Keyboard, Pressable, Text, TextInput, View } from "r
 import { LocationInput } from "./LocationInput";
 import type { PlaceSuggestion } from "../lib/places/types";
 import { usePlaceSuggestions } from "../lib/usePlaceSuggestions";
+import { formatSuggestionDisplayLabel } from "../lib/places/formatSuggestionDisplay";
 
 type Props = {
   variant: "pickup" | "dropoff";
   value: string;
   onChangeText: (v: string) => void;
   onSelectSuggestion?: (suggestion: PlaceSuggestion) => void;
+  /** Defaults to a shortened label to keep the input readable. */
+  formatDisplayValue?: (suggestion: PlaceSuggestion) => string;
   label?: string;
   placeholder?: string;
   inputAccessoryViewID?: string;
@@ -45,6 +48,7 @@ export function LocationAutocompleteInput({
   value,
   onChangeText,
   onSelectSuggestion,
+  formatDisplayValue,
   label,
   placeholder,
   inputAccessoryViewID,
@@ -75,7 +79,10 @@ export function LocationAutocompleteInput({
 
   const handleSelect = (suggestion: PlaceSuggestion) => {
     setIsSelectionLocked(true);
-    onChangeText(suggestion.label);
+    const nextValue = (formatDisplayValue ?? formatSuggestionDisplayLabel)(
+      suggestion,
+    );
+    onChangeText(nextValue || suggestion.title || suggestion.label);
     onSelectSuggestion?.(suggestion);
     // Return to the blurred/preview state after picking a suggestion.
     inputRef.current?.blur();

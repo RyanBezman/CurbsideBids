@@ -70,6 +70,24 @@ function formatPickupFromLocation(
   return `${coords.latitude.toFixed(5)}, ${coords.longitude.toFixed(5)}`;
 }
 
+function formatPickupDisplayFromLocation(
+  coords: Location.LocationObjectCoords,
+  place?: Location.LocationGeocodedAddress,
+): string {
+  if (place) {
+    const street = [place.streetNumber, place.street]
+      .filter((part): part is string => Boolean(part))
+      .join(" ")
+      .trim();
+    const namedPlace = place.name?.trim();
+
+    if (street) return street;
+    if (namedPlace) return namedPlace;
+  }
+
+  return formatPickupFromLocation(coords, place);
+}
+
 async function ensureForegroundLocationPermission(): Promise<boolean> {
   const servicesEnabled = await Location.hasServicesEnabledAsync();
   if (!servicesEnabled) {
@@ -260,13 +278,17 @@ export default function App() {
         currentLocation.coords,
         geocoded[0],
       );
+      const pickupDisplay = formatPickupDisplayFromLocation(
+        currentLocation.coords,
+        geocoded[0],
+      );
 
       // Preserve any value the user entered while geolocation was resolving.
       let applied = false;
       setPickup((prev) => {
         if (prev.trim()) return prev;
         applied = true;
-        return pickupLabel;
+        return pickupDisplay;
       });
       if (applied) {
         setPickupLocation(
