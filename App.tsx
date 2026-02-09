@@ -15,6 +15,12 @@ import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
 import type { Screen, RideType, SchedulePayload } from "./screens";
 import {
+  locationPointFromDevice,
+  locationPointFromSuggestion,
+  type LocationPoint,
+} from "./lib/places/locationPoint";
+import type { PlaceSuggestion } from "./lib/places/types";
+import {
   SignUpScreen,
   SignInScreen,
   WhereToScreen,
@@ -108,6 +114,12 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [pickup, setPickup] = useState("");
   const [dropoff, setDropoff] = useState("");
+  const [pickupLocation, setPickupLocation] = useState<LocationPoint | null>(
+    null,
+  );
+  const [dropoffLocation, setDropoffLocation] = useState<LocationPoint | null>(
+    null,
+  );
   const [rideType, setRideType] = useState<RideType>("Economy");
   const [isResolvingPickupLocation, setIsResolvingPickupLocation] =
     useState(false);
@@ -206,6 +218,27 @@ export default function App() {
     setPhone(normalizePhoneInput(value));
   };
 
+  const handlePickupChange = (value: string) => {
+    setPickup(value);
+    // If the user edits the text after selecting a suggestion (or auto-fill),
+    // treat it as "unselected".
+    setPickupLocation(null);
+  };
+
+  const handlePickupSelectSuggestion = (suggestion: PlaceSuggestion) => {
+    setPickupLocation(locationPointFromSuggestion(suggestion));
+  };
+
+  const handleDropoffChange = (value: string) => {
+    setDropoff(value);
+    // If the user edits the text after selecting a suggestion, treat it as "unselected".
+    setDropoffLocation(null);
+  };
+
+  const handleDropoffSelectSuggestion = (suggestion: PlaceSuggestion) => {
+    setDropoffLocation(locationPointFromSuggestion(suggestion));
+  };
+
   const fillPickupFromCurrentLocation = async () => {
     if (isResolvingPickupLocationRef.current) return;
 
@@ -229,7 +262,21 @@ export default function App() {
       );
 
       // Preserve any value the user entered while geolocation was resolving.
-      setPickup((prev) => (prev.trim() ? prev : pickupLabel));
+      let applied = false;
+      setPickup((prev) => {
+        if (prev.trim()) return prev;
+        applied = true;
+        return pickupLabel;
+      });
+      if (applied) {
+        setPickupLocation(
+          locationPointFromDevice({
+            label: pickupLabel,
+            latitude: currentLocation.coords.latitude,
+            longitude: currentLocation.coords.longitude,
+          }),
+        );
+      }
     } catch (error) {
       console.warn("Unable to auto-fill pickup from current location", error);
     } finally {
@@ -261,6 +308,8 @@ export default function App() {
     const schedulePayload: SchedulePayload = {
       pickup,
       dropoff,
+      pickupLocation,
+      dropoffLocation,
       rideType,
       scheduledAt: scheduleDate,
     };
@@ -328,8 +377,10 @@ export default function App() {
               pickupPlaceholder={pickupPlaceholder}
               dropoff={dropoff}
               rideType={rideType}
-              onPickupChange={setPickup}
-              onDropoffChange={setDropoff}
+              onPickupChange={handlePickupChange}
+              onPickupSelectSuggestion={handlePickupSelectSuggestion}
+              onDropoffChange={handleDropoffChange}
+              onDropoffSelectSuggestion={handleDropoffSelectSuggestion}
               onRideTypeChange={setRideType}
               onFindRides={() => onNavigate("home")}
               onNavigate={onNavigate}
@@ -342,8 +393,10 @@ export default function App() {
               pickup={pickup}
               pickupPlaceholder={pickupPlaceholder}
               dropoff={dropoff}
-              onPickupChange={setPickup}
-              onDropoffChange={setDropoff}
+              onPickupChange={handlePickupChange}
+              onPickupSelectSuggestion={handlePickupSelectSuggestion}
+              onDropoffChange={handleDropoffChange}
+              onDropoffSelectSuggestion={handleDropoffSelectSuggestion}
               onSendPackage={() => onNavigate("home")}
               onNavigate={onNavigate}
             />
@@ -357,8 +410,10 @@ export default function App() {
               dropoff={dropoff}
               rideType={rideType}
               scheduleDate={scheduleDate}
-              onPickupChange={setPickup}
-              onDropoffChange={setDropoff}
+              onPickupChange={handlePickupChange}
+              onPickupSelectSuggestion={handlePickupSelectSuggestion}
+              onDropoffChange={handleDropoffChange}
+              onDropoffSelectSuggestion={handleDropoffSelectSuggestion}
               onRideTypeChange={setRideType}
               onScheduleDateChange={setScheduleDate}
               onFindRides={handleScheduleFindRides}

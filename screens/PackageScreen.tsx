@@ -12,20 +12,22 @@ import {
 import {
   BottomActionButton,
   BackTitleHeader,
-  LocationInput,
   LocationAutocompleteInput,
   RideTypeCard,
   KeyboardDoneAccessory,
 } from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen } from "./types";
+import type { PlaceSuggestion } from "../lib/places/types";
 
 type Props = {
   pickup: string;
   pickupPlaceholder?: string;
   dropoff: string;
   onPickupChange: (v: string) => void;
+  onPickupSelectSuggestion?: (s: PlaceSuggestion) => void;
   onDropoffChange: (v: string) => void;
+  onDropoffSelectSuggestion?: (s: PlaceSuggestion) => void;
   onSendPackage: () => void;
   onNavigate: (screen: Screen) => void;
 };
@@ -38,7 +40,9 @@ export function PackageScreen({
   pickupPlaceholder,
   dropoff,
   onPickupChange,
+  onPickupSelectSuggestion,
   onDropoffChange,
+  onDropoffSelectSuggestion,
   onSendPackage,
   onNavigate,
 }: Props) {
@@ -66,17 +70,19 @@ export function PackageScreen({
             <View className="px-5 pt-6">
               <BackTitleHeader title="Send package" onBack={() => onNavigate("home")} />
 
-              <LocationInput
+              <LocationAutocompleteInput
                 variant="pickup"
                 value={pickup}
                 placeholder={pickupPlaceholder}
                 onChangeText={onPickupChange}
+                onSelectSuggestion={onPickupSelectSuggestion}
                 inputAccessoryViewID="package-keyboard-done"
               />
               <LocationAutocompleteInput
                 variant="dropoff"
                 value={dropoff}
                 onChangeText={onDropoffChange}
+                onSelectSuggestion={onDropoffSelectSuggestion}
                 inputAccessoryViewID="package-keyboard-done"
               />
 

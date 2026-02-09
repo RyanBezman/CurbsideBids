@@ -15,13 +15,13 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import {
   BottomActionButton,
   BackTitleHeader,
-  LocationInput,
   LocationAutocompleteInput,
   RideTypeCard,
   KeyboardDoneAccessory,
 } from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen, RideType } from "./types";
+import type { PlaceSuggestion } from "../lib/places/types";
 import { RIDE_ASSET_MODULES, RIDE_OPTIONS } from "./rideOptions";
 
 function formatScheduleDatetime(d: Date): string {
@@ -45,7 +45,9 @@ type ScheduleScreenProps = {
   rideType: RideType;
   scheduleDate: Date;
   onPickupChange: (v: string) => void;
+  onPickupSelectSuggestion?: (s: PlaceSuggestion) => void;
   onDropoffChange: (v: string) => void;
+  onDropoffSelectSuggestion?: (s: PlaceSuggestion) => void;
   onRideTypeChange: (v: RideType) => void;
   onScheduleDateChange: (d: Date) => void;
   onFindRides: () => void;
@@ -59,7 +61,9 @@ export function ScheduleScreen({
   rideType,
   scheduleDate,
   onPickupChange,
+  onPickupSelectSuggestion,
   onDropoffChange,
+  onDropoffSelectSuggestion,
   onRideTypeChange,
   onScheduleDateChange,
   onFindRides,
@@ -105,17 +109,19 @@ export function ScheduleScreen({
             <View className="px-5 pt-6">
               <BackTitleHeader title="Schedule ride" onBack={() => onNavigate("home")} />
 
-              <LocationInput
+              <LocationAutocompleteInput
                 variant="pickup"
                 value={pickup}
                 placeholder={pickupPlaceholder}
                 onChangeText={onPickupChange}
+                onSelectSuggestion={onPickupSelectSuggestion}
                 inputAccessoryViewID="schedule-keyboard-done"
               />
               <LocationAutocompleteInput
                 variant="dropoff"
                 value={dropoff}
                 onChangeText={onDropoffChange}
+                onSelectSuggestion={onDropoffSelectSuggestion}
                 inputAccessoryViewID="schedule-keyboard-done"
               />
 

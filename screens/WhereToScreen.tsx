@@ -12,13 +12,13 @@ import {
 import {
   BottomActionButton,
   BackTitleHeader,
-  LocationInput,
   LocationAutocompleteInput,
   RideTypeCard,
   KeyboardDoneAccessory,
 } from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
 import type { Screen, RideType } from "./types";
+import type { PlaceSuggestion } from "../lib/places/types";
 import { RIDE_ASSET_MODULES, RIDE_OPTIONS } from "./rideOptions";
 
 type Props = {
@@ -27,7 +27,9 @@ type Props = {
   dropoff: string;
   rideType: RideType;
   onPickupChange: (v: string) => void;
+  onPickupSelectSuggestion?: (s: PlaceSuggestion) => void;
   onDropoffChange: (v: string) => void;
+  onDropoffSelectSuggestion?: (s: PlaceSuggestion) => void;
   onRideTypeChange: (v: RideType) => void;
   onFindRides: () => void;
   onNavigate: (screen: Screen) => void;
@@ -39,7 +41,9 @@ export function WhereToScreen({
   dropoff,
   rideType,
   onPickupChange,
+  onPickupSelectSuggestion,
   onDropoffChange,
+  onDropoffSelectSuggestion,
   onRideTypeChange,
   onFindRides,
   onNavigate,
@@ -68,17 +72,19 @@ export function WhereToScreen({
             <View className="px-5 pt-6">
               <BackTitleHeader title="Where to?" onBack={() => onNavigate("home")} />
 
-              <LocationInput
+              <LocationAutocompleteInput
                 variant="pickup"
                 value={pickup}
                 placeholder={pickupPlaceholder}
                 onChangeText={onPickupChange}
+                onSelectSuggestion={onPickupSelectSuggestion}
                 inputAccessoryViewID="whereto-keyboard-done"
               />
               <LocationAutocompleteInput
                 variant="dropoff"
                 value={dropoff}
                 onChangeText={onDropoffChange}
+                onSelectSuggestion={onDropoffSelectSuggestion}
                 inputAccessoryViewID="whereto-keyboard-done"
               />
 
