@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { ActivityIndicator, Keyboard, Pressable, Text, TextInput, View } from "react-native";
 import { LocationInput } from "./LocationInput";
 import type { PlaceSuggestion } from "../lib/places/types";
 import { usePlaceSuggestions } from "../lib/usePlaceSuggestions";
@@ -51,6 +51,7 @@ export function LocationAutocompleteInput({
   debounceMs,
   minQueryLength,
 }: Props) {
+  const inputRef = useRef<TextInput>(null);
   const [isFocused, setIsFocused] = useState(false);
   const [isSelectionLocked, setIsSelectionLocked] = useState(false);
 
@@ -76,6 +77,10 @@ export function LocationAutocompleteInput({
     setIsSelectionLocked(true);
     onChangeText(suggestion.label);
     onSelectSuggestion?.(suggestion);
+    // Return to the blurred/preview state after picking a suggestion.
+    inputRef.current?.blur();
+    Keyboard.dismiss();
+    setIsFocused(false);
   };
 
   const showResults =
@@ -89,6 +94,7 @@ export function LocationAutocompleteInput({
   return (
     <View>
       <LocationInput
+        ref={inputRef}
         variant={variant}
         value={value}
         onChangeText={handleChangeText}
