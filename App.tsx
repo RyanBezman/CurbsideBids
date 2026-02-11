@@ -11,9 +11,20 @@ import {
   type NativeStackNavigationOptions,
 } from "@react-navigation/native-stack";
 import { formatPhoneForDisplay, normalizePhoneInput } from "./lib/phone";
+import {
+  cancelReservation,
+  createScheduledReservation,
+  listRecentReservations,
+} from "./lib/reservations";
 import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
-import type { AccountRole, Screen, RideType, SchedulePayload } from "./screens";
+import type {
+  AccountRole,
+  ReservationRecord,
+  Screen,
+  RideType,
+  ScheduledReservationInsertPayload,
+} from "./screens";
 import {
   locationPointFromDevice,
   locationPointFromSuggestion,
@@ -88,6 +99,10 @@ function formatPickupDisplayFromLocation(
   return formatPickupFromLocation(coords, place);
 }
 
+function formatScheduleForConfirmation(iso: string): string {
+  return new Date(iso).toLocaleString();
+}
+
 async function ensureForegroundLocationPermission(): Promise<boolean> {
   const servicesEnabled = await Location.hasServicesEnabledAsync();
   if (!servicesEnabled) {
@@ -143,6 +158,18 @@ export default function App() {
   const [isResolvingPickupLocation, setIsResolvingPickupLocation] =
     useState(false);
   const isResolvingPickupLocationRef = useRef(false);
+  const [isSchedulingRide, setIsSchedulingRide] = useState(false);
+  const [isCancelingReservation, setIsCancelingReservation] = useState(false);
+  const [recentReservations, setRecentReservations] = useState<ReservationRecord[]>(
+    [],
+  );
+  const [isLoadingRecentReservations, setIsLoadingRecentReservations] =
+    useState(false);
+  const [pendingScheduleSubmission, setPendingScheduleSubmission] =
+    useState<ScheduledReservationInsertPayload | null>(null);
+  const pendingScheduleSubmissionRef =
+    useRef<ScheduledReservationInsertPayload | null>(null);
+  const isSubmittingScheduledReservationRef = useRef(false);
   /** Schedule date/time; held in state for schedule flow and future API submission. */
   const [scheduleDate, setScheduleDate] = useState<Date>(() => {
     const d = new Date();
@@ -156,6 +183,10 @@ export default function App() {
     : undefined;
 
   useEffect(() => {
+    pendingScheduleSubmissionRef.current = pendingScheduleSubmission;
+  }, [pendingScheduleSubmission]);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
     });
@@ -166,6 +197,11 @@ export default function App() {
       setUser(session?.user ?? null);
 
       if (navigationRef.isReady()) {
+        const hasPendingScheduleSubmission = Boolean(
+          session?.user && pendingScheduleSubmissionRef.current,
+        );
+        if (hasPendingScheduleSubmission) return;
+
         navigationRef.resetRoot({
           index: 0,
           routes: [{ name: "home" }],
@@ -232,6 +268,8 @@ export default function App() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+    setPendingScheduleSubmission(null);
+    setRecentReservations([]);
     onNavigate("home");
   };
 
@@ -328,18 +366,140 @@ export default function App() {
     navigationRef.navigate(next);
   };
 
-  const handleScheduleFindRides = () => {
-    // Keep this payload construction close to submit action for easy API integration.
-    const schedulePayload: SchedulePayload = {
-      pickup,
-      dropoff,
-      pickupLocation,
-      dropoffLocation,
-      rideType,
-      scheduledAt: scheduleDate,
+  const loadRecentReservations = async (targetUserId: string) => {
+    setIsLoadingRecentReservations(true);
+    try {
+      const reservations = await listRecentReservations(targetUserId, 10);
+      setRecentReservations(reservations);
+    } catch (error) {
+      console.warn("Unable to load recent reservations", error);
+      setRecentReservations([]);
+    } finally {
+      setIsLoadingRecentReservations(false);
+    }
+  };
+
+  const buildScheduledReservationPayload =
+    (): ScheduledReservationInsertPayload | null => {
+      const trimmedPickup = pickup.trim();
+      if (!trimmedPickup) {
+        Alert.alert("Missing pickup", "Please enter a pickup location.");
+        return null;
+      }
+
+      const trimmedDropoff = dropoff.trim();
+      if (!trimmedDropoff) {
+        Alert.alert("Missing dropoff", "Please enter a dropoff location.");
+        return null;
+      }
+
+      if (!rideType) {
+        Alert.alert("Missing ride type", "Please select a ride type.");
+        return null;
+      }
+
+      if (scheduleDate.getTime() <= Date.now()) {
+        Alert.alert(
+          "Invalid schedule time",
+          "Please choose a future date and time.",
+        );
+        return null;
+      }
+
+      return {
+        kind: "scheduled",
+        pickup: trimmedPickup,
+        dropoff: trimmedDropoff,
+        pickupLocation,
+        dropoffLocation,
+        rideType,
+        scheduledAtIso: scheduleDate.toISOString(),
+      };
     };
-    void schedulePayload;
-    onNavigate("home");
+
+  const submitScheduledReservation = async (
+    payload: ScheduledReservationInsertPayload,
+    options?: { fromPending?: boolean },
+  ) => {
+    if (isSubmittingScheduledReservationRef.current) return;
+
+    if (!user) {
+      if (!options?.fromPending) {
+        setPendingScheduleSubmission(payload);
+        Alert.alert(
+          "Sign in required",
+          "Sign in to schedule your ride. We'll submit it right after you sign in.",
+          [{ text: "Continue", onPress: () => onNavigate("signin") }],
+        );
+      }
+      return;
+    }
+
+    isSubmittingScheduledReservationRef.current = true;
+    setIsSchedulingRide(true);
+    try {
+      await createScheduledReservation(payload, user.id);
+      setPendingScheduleSubmission(null);
+      // Keep pickup and ride type for quick repeat scheduling, but clear destination.
+      setDropoff("");
+      setDropoffLocation(null);
+      setRideType("Economy");
+      await loadRecentReservations(user.id);
+      Alert.alert(
+        "Ride scheduled",
+        `Your ${payload.rideType} ride is scheduled for ${formatScheduleForConfirmation(payload.scheduledAtIso)}.\n\n${payload.pickup} -> ${payload.dropoff}`,
+        [{ text: "OK", onPress: () => onNavigate("home") }],
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to schedule your ride right now.";
+      Alert.alert("Could not schedule ride", message);
+      if (options?.fromPending) {
+        setPendingScheduleSubmission(null);
+        onNavigate("schedule");
+      }
+    } finally {
+      isSubmittingScheduledReservationRef.current = false;
+      setIsSchedulingRide(false);
+    }
+  };
+
+  const handleCancelReservation = async (reservationId: string) => {
+    if (!user) {
+      throw new Error("You need to be signed in to cancel a ride.");
+    }
+
+    setIsCancelingReservation(true);
+    try {
+      await cancelReservation(reservationId, user.id);
+      await loadRecentReservations(user.id);
+    } finally {
+      setIsCancelingReservation(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !pendingScheduleSubmission) return;
+    void submitScheduledReservation(pendingScheduleSubmission, {
+      fromPending: true,
+    });
+  }, [user, pendingScheduleSubmission]);
+
+  useEffect(() => {
+    if (!user) {
+      setRecentReservations([]);
+      setIsLoadingRecentReservations(false);
+      return;
+    }
+    void loadRecentReservations(user.id);
+  }, [user]);
+
+  const handleScheduleFindRides = () => {
+    const payload = buildScheduledReservationPayload();
+    if (!payload) return;
+    void submitScheduledReservation(payload);
   };
 
   const sharedStackOptions: NativeStackNavigationOptions = {
@@ -359,6 +519,10 @@ export default function App() {
                 user={user}
                 onSignOut={handleSignOut}
                 onNavigate={onNavigate}
+                recentReservations={recentReservations}
+                isLoadingRecentReservations={isLoadingRecentReservations}
+                isCancelingReservation={isCancelingReservation}
+                onCancelReservation={handleCancelReservation}
               />
             ) : (
               <HomeScreenLoggedOut onNavigate={onNavigate} />
@@ -444,6 +608,7 @@ export default function App() {
               onRideTypeChange={setRideType}
               onScheduleDateChange={setScheduleDate}
               onFindRides={handleScheduleFindRides}
+              isSubmitting={isSchedulingRide}
               onNavigate={onNavigate}
             />
           )}

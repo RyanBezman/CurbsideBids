@@ -51,6 +51,7 @@ type ScheduleScreenProps = {
   onRideTypeChange: (v: RideType) => void;
   onScheduleDateChange: (d: Date) => void;
   onFindRides: () => void;
+  isSubmitting?: boolean;
   onNavigate: (screen: Screen) => void;
 };
 
@@ -67,6 +68,7 @@ export function ScheduleScreen({
   onRideTypeChange,
   onScheduleDateChange,
   onFindRides,
+  isSubmitting = false,
   onNavigate,
 }: ScheduleScreenProps) {
   const [showPicker, setShowPicker] = useState(false);
@@ -204,7 +206,12 @@ export function ScheduleScreen({
           </TouchableWithoutFeedback>
         </ScrollView>
 
-        <BottomActionButton label="Find rides" onPress={onFindRides} />
+        <BottomActionButton
+          label={isSubmitting ? "Scheduling..." : "Schedule ride"}
+          onPress={onFindRides}
+          loading={isSubmitting}
+          disabled={isSubmitting}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

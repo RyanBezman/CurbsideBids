@@ -35,3 +35,9 @@ export const RIDE_OPTIONS = [
 ] as const satisfies readonly RideOption[];
 
 export const RIDE_ASSET_MODULES = RIDE_OPTIONS.map(({ source }) => source);
+
+export const RIDE_OPTION_BY_TYPE: Record<RideType, (typeof RIDE_OPTIONS)[number]> =
+  Object.fromEntries(RIDE_OPTIONS.map((option) => [option.type, option])) as Record<
+    RideType,
+    (typeof RIDE_OPTIONS)[number]
+  >;

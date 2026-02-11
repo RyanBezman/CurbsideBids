@@ -5,4 +5,13 @@ export { PackageScreen } from "./PackageScreen";
 export { ScheduleScreen } from "./ScheduleScreen";
 export { HomeScreenLoggedIn } from "./HomeScreenLoggedIn";
 export { HomeScreenLoggedOut } from "./HomeScreenLoggedOut";
-export type { Screen, AccountRole, RideType, SchedulePayload } from "./types";
+export type {
+  Screen,
+  AccountRole,
+  RideType,
+  ReservationKind,
+  ReservationRecord,
+  ReservationStatus,
+  SchedulePayload,
+  ScheduledReservationInsertPayload,
+} from "./types";
