@@ -10,15 +10,15 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import {
-  BottomActionButton,
   BackTitleHeader,
-  LocationAutocompleteInput,
-  RideTypeCard,
+  BottomActionButton,
   KeyboardDoneAccessory,
+  LocationSection,
+  RideTypeCard,
 } from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
-import type { Screen } from "./types";
 import type { PlaceSuggestion } from "../lib/places/types";
+import type { Screen } from "./types";
 
 type Props = {
   pickup: string;
@@ -60,9 +60,7 @@ export function PackageScreen({
         <ScrollView
           className="flex-1"
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={
-            Platform.OS === "ios" ? "interactive" : "on-drag"
-          }
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
         >
@@ -70,37 +68,30 @@ export function PackageScreen({
             <View className="px-5 pt-6">
               <BackTitleHeader title="Send package" onBack={() => onNavigate("home")} />
 
-              <LocationAutocompleteInput
-                variant="pickup"
-                value={pickup}
-                placeholder={pickupPlaceholder}
-                onChangeText={onPickupChange}
-                onSelectSuggestion={onPickupSelectSuggestion}
-                inputAccessoryViewID="package-keyboard-done"
-              />
-              <LocationAutocompleteInput
-                variant="dropoff"
-                value={dropoff}
-                onChangeText={onDropoffChange}
-                onSelectSuggestion={onDropoffSelectSuggestion}
+              <LocationSection
+                pickup={pickup}
+                pickupPlaceholder={pickupPlaceholder}
+                dropoff={dropoff}
+                onPickupChange={onPickupChange}
+                onPickupSelectSuggestion={onPickupSelectSuggestion}
+                onDropoffChange={onDropoffChange}
+                onDropoffSelectSuggestion={onDropoffSelectSuggestion}
                 inputAccessoryViewID="package-keyboard-done"
               />
 
-            <Text className="text-neutral-400 text-sm mb-2 ml-1">
-              Package delivery
-            </Text>
-            <View className="gap-2">
-              <RideTypeCard
-                type="Economy"
-                source={PACKAGE_GRAPHIC}
-                minsAway={isRideTypeLoading ? "" : "15 min away"}
-                arrival={isRideTypeLoading ? "" : "Est. delivery ~3:15 PM"}
-                selected={!isRideTypeLoading}
-                onSelect={() => {}}
-                label="Package"
-                loading={isRideTypeLoading}
-              />
-            </View>
+              <Text className="text-neutral-400 text-sm mb-2 ml-1">Package delivery</Text>
+              <View className="gap-2">
+                <RideTypeCard
+                  type="Economy"
+                  source={PACKAGE_GRAPHIC}
+                  minsAway={isRideTypeLoading ? "" : "15 min away"}
+                  arrival={isRideTypeLoading ? "" : "Est. delivery ~3:15 PM"}
+                  selected={!isRideTypeLoading}
+                  onSelect={() => {}}
+                  label="Package"
+                  loading={isRideTypeLoading}
+                />
+              </View>
             </View>
           </TouchableWithoutFeedback>
         </ScrollView>

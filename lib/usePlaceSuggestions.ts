@@ -11,7 +11,7 @@ type Options = {
 
 export function usePlaceSuggestions(query: string, options: Options = {}) {
   const enabled = options.enabled ?? true;
-  const debounceMs = options.debounceMs ?? 250;
+  const debounceMs = options.debounceMs ?? 400;
   const minQueryLength = options.minQueryLength ?? 3;
 
   const trimmed = query.trim();
@@ -65,10 +65,13 @@ export function usePlaceSuggestions(query: string, options: Options = {}) {
       })
       .catch((err: unknown) => {
         if (controller.signal.aborted) return;
-        const message =
-          err instanceof Error ? err.message : "Unable to search places";
-        setError(message);
-        setSuggestions([]);
+        const message = err instanceof Error ? err.message : "";
+        if (message.includes("Place search failed")) {
+          // Avoid noisy provider errors while typing; keep prior results visible.
+          setError(null);
+          return;
+        }
+        setError("Unable to search places");
       })
       .finally(() => {
         if (controller.signal.aborted) return;

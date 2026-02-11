@@ -1,9 +1,9 @@
 import { useMemo, useRef, useState } from "react";
 import { ActivityIndicator, Keyboard, Pressable, Text, TextInput, View } from "react-native";
 import { LocationInput } from "./LocationInput";
-import type { PlaceSuggestion } from "../lib/places/types";
-import { usePlaceSuggestions } from "../lib/usePlaceSuggestions";
-import { formatSuggestionDisplayLabel } from "../lib/places/formatSuggestionDisplay";
+import type { PlaceSuggestion } from "../../lib/places/types";
+import { usePlaceSuggestions } from "../../lib/usePlaceSuggestions";
+import { formatSuggestionDisplayLabel } from "../../lib/places/formatSuggestionDisplay";
 
 type Props = {
   variant: "pickup" | "dropoff";

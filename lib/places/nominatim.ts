@@ -100,25 +100,43 @@ export async function nominatimSuggestPlaces(
   const q = query.trim();
   if (!q) return [];
 
+  const limit = options.limit ?? 6;
   const params = new URLSearchParams();
   params.set("q", q);
   params.set("format", "jsonv2");
   params.set("addressdetails", "1");
-  params.set("limit", String(options.limit ?? 6));
-  params.set("countrycodes", options.countryCodes ?? "us");
+  params.set("dedupe", "1");
+  params.set("limit", String(limit));
+  if (options.countryCodes) {
+    params.set("countrycodes", options.countryCodes);
+  }
 
   const url = `https://nominatim.openstreetmap.org/search?${params.toString()}`;
-  const response = await fetch(url, {
+  const headers = {
+    Accept: "application/json",
+    "Accept-Language": options.language ?? "en",
+  };
+
+  const firstResponse = await fetch(url, {
     signal: options.signal,
-    headers: {
-      Accept: "application/json",
-      // Best-effort. Nominatim prefers identifiable clients; for production,
-      // proxy this server-side so you can set a stable User-Agent/contact.
-      "Accept-Language": options.language ?? "en",
-    },
+    headers,
   });
 
+  let response = firstResponse;
+  // Single quick retry for transient upstream overload.
+  if (!response.ok && (response.status === 429 || response.status === 503)) {
+    response = await fetch(url, {
+      signal: options.signal,
+      headers,
+    });
+  }
+
+  // Nominatim can transiently throttle; treat it as empty results to avoid
+  // surfacing hard errors while user is typing.
   if (!response.ok) {
+    if (response.status === 429 || response.status === 503) {
+      return [];
+    }
     throw new Error(`Place search failed (${response.status})`);
   }
 
@@ -143,7 +161,8 @@ export async function nominatimSuggestPlaces(
 
     const address = parseAddress(item.address);
     const title = formatTitleFromAddress(displayName, address);
-    const subtitle = formatSubtitleFromAddress(address) ?? splitDisplayName(displayName).subtitle;
+    const subtitle =
+      formatSubtitleFromAddress(address) ?? splitDisplayName(displayName).subtitle;
 
     out.push({
       id,

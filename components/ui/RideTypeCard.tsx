@@ -8,7 +8,7 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import type { RideType } from "../screens/types";
+import type { RideType } from "../../screens/types";
 
 type Props = {
   type: RideType;
