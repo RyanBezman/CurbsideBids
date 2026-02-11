@@ -10,18 +10,20 @@ import {
   ScrollView,
   ActivityIndicator,
 } from "react-native";
-import type { Screen } from "./types";
+import type { AccountRole, Screen } from "./types";
 
 type Props = {
   name: string;
   email: string;
   phone: string;
   password: string;
+  role: AccountRole;
   loading: boolean;
   onNameChange: (v: string) => void;
   onEmailChange: (v: string) => void;
   onPhoneChange: (v: string) => void;
   onPasswordChange: (v: string) => void;
+  onRoleChange: (v: AccountRole) => void;
   onSignUp: () => void;
   onNavigate: (screen: Screen) => void;
 };
@@ -31,11 +33,13 @@ export function SignUpScreen({
   email,
   phone,
   password,
+  role,
   loading,
   onNameChange,
   onEmailChange,
   onPhoneChange,
   onPasswordChange,
+  onRoleChange,
   onSignUp,
   onNavigate,
 }: Props) {
@@ -61,6 +65,41 @@ export function SignUpScreen({
             </View>
 
             <View className="gap-4 mb-8">
+              <View>
+                <Text className="text-neutral-400 text-sm mb-2 ml-1">
+                  Account Type
+                </Text>
+                <View className="bg-neutral-900 rounded-2xl p-1 border border-neutral-800 flex-row">
+                  <TouchableOpacity
+                    onPress={() => onRoleChange("rider")}
+                    className={`flex-1 rounded-xl py-3 items-center ${
+                      role === "rider" ? "bg-violet-600" : "bg-transparent"
+                    }`}
+                  >
+                    <Text
+                      className={`font-semibold ${
+                        role === "rider" ? "text-white" : "text-neutral-300"
+                      }`}
+                    >
+                      Rider
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => onRoleChange("driver")}
+                    className={`flex-1 rounded-xl py-3 items-center ${
+                      role === "driver" ? "bg-violet-600" : "bg-transparent"
+                    }`}
+                  >
+                    <Text
+                      className={`font-semibold ${
+                        role === "driver" ? "text-white" : "text-neutral-300"
+                      }`}
+                    >
+                      Driver
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
               <View>
                 <Text className="text-neutral-400 text-sm mb-2 ml-1">
                   Full Name

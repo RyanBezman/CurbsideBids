@@ -56,18 +56,42 @@ const seedUsers = [
     password: "aaaaaa",
     full_name: "Ryan Bezman",
     phone: "5164064098",
+    role: "rider",
   },
   {
     email: "b@aol.com",
     password: "bbbbbb",
     full_name: "Matthew Bezman",
     phone: "5162797883",
+    role: "rider",
   },
   {
     email: "c@aol.com",
     password: "cccccc",
     full_name: "Terence Bezman",
     phone: "5165327603",
+    role: "rider",
+  },
+  {
+    email: "d@aol.com",
+    password: "dddddd",
+    full_name: "Steve Bezman",
+    phone: "5160000004",
+    role: "driver",
+  },
+  {
+    email: "e@aol.com",
+    password: "eeeeee",
+    full_name: "Amrit Singh",
+    phone: "5160000005",
+    role: "driver",
+  },
+  {
+    email: "f@aol.com",
+    password: "ffffff",
+    full_name: "Steve Matthews",
+    phone: "5160000006",
+    role: "driver",
   },
 ];
 
@@ -111,6 +135,7 @@ async function createSeedUsers() {
       user_metadata: {
         full_name: user.full_name,
         phone: user.phone,
+        role: user.role,
       },
     });
     if (error) throw error;

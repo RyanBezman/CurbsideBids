@@ -12,7 +12,14 @@ type Props = {
   onNavigate: (screen: Screen) => void;
 };
 
+function getUserRole(user: User): "rider" | "driver" {
+  const rawRole = user.user_metadata?.role;
+  return rawRole === "driver" ? "driver" : "rider";
+}
+
 export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
+  const role = getUserRole(user);
+  const isDriver = role === "driver";
   const [quickAction, setQuickAction] = useState<QuickAction | null>(null);
 
   return (
@@ -50,109 +57,153 @@ export function HomeScreenLoggedIn({ user, onSignOut, onNavigate }: Props) {
               <Text className="text-white font-semibold text-base">
                 {user.user_metadata?.full_name || user.email}
               </Text>
-              <Text className="text-neutral-500 text-sm">Rider</Text>
+              <Text className="text-neutral-500 text-sm">
+                {isDriver ? "Driver" : "Rider"}
+              </Text>
             </View>
           </View>
         </View>
 
-        <TouchableOpacity
-          onPress={() => {
-            if (quickAction === "package") onNavigate("package");
-            else if (quickAction === "scheduled") onNavigate("schedule");
-            else onNavigate("whereto");
-          }}
-          className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800"
-          activeOpacity={0.8}
-        >
-          <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
-          <Text className="text-neutral-400 text-base flex-1">Where to?</Text>
-          <Text className="text-violet-400">→</Text>
-        </TouchableOpacity>
+        {isDriver ? (
+          <>
+            <View className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 border border-neutral-800">
+              <Text className="text-white text-base font-semibold mb-1">
+                Driver Dashboard
+              </Text>
+              <Text className="text-neutral-400 text-sm">
+                Driver tools are being rolled out in phases. You are set up as a
+                driver account.
+              </Text>
+            </View>
 
-        <View className="flex-row gap-3 mb-8">
-          <TouchableOpacity
-            onPress={() => {
-              setQuickAction("rides");
-              onNavigate("whereto");
-            }}
-            activeOpacity={0.8}
-            className={`flex-1 rounded-2xl py-5 items-center border ${
-              quickAction === "rides"
-                ? "bg-violet-600 border-violet-500"
-                : "bg-neutral-900 border-neutral-800"
-            }`}
-          >
-            <Text className="text-xl mb-1">🚗</Text>
-            <Text
-              className={`font-semibold text-sm ${
-                quickAction === "rides" ? "text-white" : "text-neutral-300"
-              }`}
-            >
-              Ride
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setQuickAction("package");
-              onNavigate("package");
-            }}
-            activeOpacity={0.8}
-            className={`flex-1 rounded-2xl py-5 items-center border ${
-              quickAction === "package"
-                ? "bg-violet-600 border-violet-500"
-                : "bg-neutral-900 border-neutral-800"
-            }`}
-          >
-            <Text className="text-xl mb-1">📦</Text>
-            <Text
-              className={`font-semibold text-sm ${
-                quickAction === "package" ? "text-white" : "text-neutral-300"
-              }`}
-            >
-              Package
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => {
-              setQuickAction("scheduled");
-              onNavigate("schedule");
-            }}
-            activeOpacity={0.8}
-            className={`flex-1 rounded-2xl py-5 items-center border ${
-              quickAction === "scheduled"
-                ? "bg-violet-600 border-violet-500"
-                : "bg-neutral-900 border-neutral-800"
-            }`}
-          >
-            <Text className="text-xl mb-1">📅</Text>
-            <Text
-              className={`font-semibold text-sm ${
-                quickAction === "scheduled" ? "text-white" : "text-neutral-300"
-              }`}
-            >
-              Schedule
-            </Text>
-          </TouchableOpacity>
-        </View>
+            <View className="flex-row gap-3 mb-8">
+              <View className="flex-1 rounded-2xl py-5 items-center border bg-neutral-900 border-neutral-800">
+                <Text className="text-xl mb-1">🚘</Text>
+                <Text className="font-semibold text-sm text-neutral-300">
+                  Availability
+                </Text>
+                <Text className="text-xs text-neutral-500 mt-1">Offline</Text>
+              </View>
+              <View className="flex-1 rounded-2xl py-5 items-center border bg-neutral-900 border-neutral-800">
+                <Text className="text-xl mb-1">📋</Text>
+                <Text className="font-semibold text-sm text-neutral-300">
+                  Requests
+                </Text>
+                <Text className="text-xs text-neutral-500 mt-1">0 pending</Text>
+              </View>
+            </View>
 
-        <View className="bg-neutral-900 rounded-2xl p-4 mb-8 flex-row items-center border border-neutral-800">
-          <View className="w-2 h-2 rounded-full bg-green-400 mr-3" />
-          <Text className="text-neutral-400 text-sm flex-1">
-            <Text className="text-white font-semibold">247</Text> drivers nearby
-          </Text>
-          <Text className="text-violet-400 text-sm font-medium">
-            ~3 min pickup
-          </Text>
-        </View>
+            <View className="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
+              <Text className="text-white text-base font-semibold mb-2">
+                Coming Next
+              </Text>
+              <Text className="text-neutral-400 text-sm">
+                Request queue, accept/decline actions, and earnings history.
+              </Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                if (quickAction === "package") onNavigate("package");
+                else if (quickAction === "scheduled") onNavigate("schedule");
+                else onNavigate("whereto");
+              }}
+              className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 flex-row items-center border border-neutral-800"
+              activeOpacity={0.8}
+            >
+              <View className="w-3 h-3 rounded-full bg-violet-500 mr-4" />
+              <Text className="text-neutral-400 text-base flex-1">Where to?</Text>
+              <Text className="text-violet-400">→</Text>
+            </TouchableOpacity>
 
-        <Text className="text-white text-lg font-semibold mb-4">
-          Recent Activity
-        </Text>
-        <View className="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-          <Text className="text-neutral-500 text-sm text-center">
-            No recent rides yet
-          </Text>
-        </View>
+            <View className="flex-row gap-3 mb-8">
+              <TouchableOpacity
+                onPress={() => {
+                  setQuickAction("rides");
+                  onNavigate("whereto");
+                }}
+                activeOpacity={0.8}
+                className={`flex-1 rounded-2xl py-5 items-center border ${
+                  quickAction === "rides"
+                    ? "bg-violet-600 border-violet-500"
+                    : "bg-neutral-900 border-neutral-800"
+                }`}
+              >
+                <Text className="text-xl mb-1">🚗</Text>
+                <Text
+                  className={`font-semibold text-sm ${
+                    quickAction === "rides" ? "text-white" : "text-neutral-300"
+                  }`}
+                >
+                  Ride
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setQuickAction("package");
+                  onNavigate("package");
+                }}
+                activeOpacity={0.8}
+                className={`flex-1 rounded-2xl py-5 items-center border ${
+                  quickAction === "package"
+                    ? "bg-violet-600 border-violet-500"
+                    : "bg-neutral-900 border-neutral-800"
+                }`}
+              >
+                <Text className="text-xl mb-1">📦</Text>
+                <Text
+                  className={`font-semibold text-sm ${
+                    quickAction === "package" ? "text-white" : "text-neutral-300"
+                  }`}
+                >
+                  Package
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  setQuickAction("scheduled");
+                  onNavigate("schedule");
+                }}
+                activeOpacity={0.8}
+                className={`flex-1 rounded-2xl py-5 items-center border ${
+                  quickAction === "scheduled"
+                    ? "bg-violet-600 border-violet-500"
+                    : "bg-neutral-900 border-neutral-800"
+                }`}
+              >
+                <Text className="text-xl mb-1">📅</Text>
+                <Text
+                  className={`font-semibold text-sm ${
+                    quickAction === "scheduled" ? "text-white" : "text-neutral-300"
+                  }`}
+                >
+                  Schedule
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <View className="bg-neutral-900 rounded-2xl p-4 mb-8 flex-row items-center border border-neutral-800">
+              <View className="w-2 h-2 rounded-full bg-green-400 mr-3" />
+              <Text className="text-neutral-400 text-sm flex-1">
+                <Text className="text-white font-semibold">247</Text> drivers nearby
+              </Text>
+              <Text className="text-violet-400 text-sm font-medium">
+                ~3 min pickup
+              </Text>
+            </View>
+
+            <Text className="text-white text-lg font-semibold mb-4">
+              Recent Activity
+            </Text>
+            <View className="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
+              <Text className="text-neutral-500 text-sm text-center">
+                No recent rides yet
+              </Text>
+            </View>
+          </>
+        )}
       </View>
     </SafeAreaView>
   );

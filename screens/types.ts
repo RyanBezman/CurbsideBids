@@ -8,6 +8,8 @@ export type Screen =
   | "package"
   | "schedule";
 
+export type AccountRole = "rider" | "driver";
+
 export type RideType = "Economy" | "XL" | "Luxury" | "Luxury SUV";
 
 /** Schedule form state held for the schedule flow; ready for API submission. */

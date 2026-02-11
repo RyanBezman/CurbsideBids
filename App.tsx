@@ -13,7 +13,7 @@ import {
 import { formatPhoneForDisplay, normalizePhoneInput } from "./lib/phone";
 import { supabase } from "./lib/supabase";
 import { User } from "@supabase/supabase-js";
-import type { Screen, RideType, SchedulePayload } from "./screens";
+import type { AccountRole, Screen, RideType, SchedulePayload } from "./screens";
 import {
   locationPointFromDevice,
   locationPointFromSuggestion,
@@ -128,6 +128,7 @@ export default function App() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState<AccountRole>("rider");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [pickup, setPickup] = useState("");
@@ -184,7 +185,7 @@ export default function App() {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name, phone } },
+      options: { data: { full_name: name, phone, role } },
     });
     setLoading(false);
 
@@ -195,6 +196,7 @@ export default function App() {
       setEmail("");
       setPhone("");
       setPassword("");
+      setRole("rider");
     } else if (data.user && !data.session) {
       Alert.alert(
         "Check your email",
@@ -205,6 +207,7 @@ export default function App() {
       setEmail("");
       setPhone("");
       setPassword("");
+      setRole("rider");
     }
   };
 
@@ -369,11 +372,13 @@ export default function App() {
               email={email}
               phone={phoneDisplayValue}
               password={password}
+              role={role}
               loading={loading}
               onNameChange={setName}
               onEmailChange={setEmail}
               onPhoneChange={handlePhoneChange}
               onPasswordChange={setPassword}
+              onRoleChange={setRole}
               onSignUp={handleSignUp}
               onNavigate={onNavigate}
             />
