@@ -53,8 +53,8 @@ export async function createScheduledReservation(
   if (Number.isNaN(scheduledDate.getTime())) {
     throw new Error("Scheduled date/time is invalid.");
   }
-  if (scheduledDate.getTime() <= Date.now()) {
-    throw new Error("Scheduled date/time must be in the future.");
+  if (scheduledDate.getTime() - Date.now() < 60 * 60 * 1000) {
+    throw new Error("Scheduled date/time must be at least 1 hour in the future.");
   }
 
   const { data, error } = await supabase

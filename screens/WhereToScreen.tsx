@@ -1,7 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import {
   View,
-  Text,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
@@ -10,16 +9,16 @@ import {
   TouchableWithoutFeedback,
 } from "react-native";
 import {
-  BottomActionButton,
   BackTitleHeader,
-  LocationAutocompleteInput,
-  RideTypeCard,
+  BottomActionButton,
   KeyboardDoneAccessory,
+  LocationSection,
+  RideTypeSection,
 } from "../components";
 import { useEntryLoading } from "../lib/useEntryLoading";
-import type { Screen, RideType } from "./types";
+import { RIDE_ASSET_MODULES } from "../constants/rideOptions";
 import type { PlaceSuggestion } from "../lib/places/types";
-import { RIDE_ASSET_MODULES, RIDE_OPTIONS } from "./rideOptions";
+import type { RideType, Screen } from "./types";
 
 type Props = {
   pickup: string;
@@ -62,9 +61,7 @@ export function WhereToScreen({
         <ScrollView
           className="flex-1"
           keyboardShouldPersistTaps="handled"
-          keyboardDismissMode={
-            Platform.OS === "ios" ? "interactive" : "on-drag"
-          }
+          keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
           contentContainerStyle={{ paddingBottom: 16 }}
           showsVerticalScrollIndicator={false}
         >
@@ -72,51 +69,22 @@ export function WhereToScreen({
             <View className="px-5 pt-6">
               <BackTitleHeader title="Where to?" onBack={() => onNavigate("home")} />
 
-              <LocationAutocompleteInput
-                variant="pickup"
-                value={pickup}
-                placeholder={pickupPlaceholder}
-                onChangeText={onPickupChange}
-                onSelectSuggestion={onPickupSelectSuggestion}
-                inputAccessoryViewID="whereto-keyboard-done"
-              />
-              <LocationAutocompleteInput
-                variant="dropoff"
-                value={dropoff}
-                onChangeText={onDropoffChange}
-                onSelectSuggestion={onDropoffSelectSuggestion}
+              <LocationSection
+                pickup={pickup}
+                pickupPlaceholder={pickupPlaceholder}
+                dropoff={dropoff}
+                onPickupChange={onPickupChange}
+                onPickupSelectSuggestion={onPickupSelectSuggestion}
+                onDropoffChange={onDropoffChange}
+                onDropoffSelectSuggestion={onDropoffSelectSuggestion}
                 inputAccessoryViewID="whereto-keyboard-done"
               />
 
-            <Text className="text-neutral-400 text-sm mb-2 ml-1">
-              Ride type
-            </Text>
-            <View className="gap-2">
-              {isRideTypeLoading
-                ? RIDE_OPTIONS.map(({ type, source }) => (
-                    <RideTypeCard
-                      key={`${type}-skeleton`}
-                      type={type}
-                      source={source}
-                      minsAway=""
-                      arrival=""
-                      selected={false}
-                      onSelect={() => {}}
-                      loading
-                    />
-                  ))
-                : RIDE_OPTIONS.map(({ type, source, minsAway, arrival }) => (
-                    <RideTypeCard
-                      key={type}
-                      type={type}
-                      source={source}
-                      minsAway={minsAway}
-                      arrival={arrival}
-                      selected={rideType === type}
-                      onSelect={() => onRideTypeChange(type)}
-                    />
-                  ))}
-            </View>
+              <RideTypeSection
+                rideType={rideType}
+                onRideTypeChange={onRideTypeChange}
+                isLoading={isRideTypeLoading}
+              />
             </View>
           </TouchableWithoutFeedback>
         </ScrollView>
