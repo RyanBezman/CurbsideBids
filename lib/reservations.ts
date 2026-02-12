@@ -102,6 +102,26 @@ export async function listRecentReservations(
   return (data ?? []).map((row) => mapReservationRow(row as ReservationRow));
 }
 
+export async function listPendingRideReservations(
+  limit = 50,
+): Promise<ReservationRecord[]> {
+  const { data, error } = await supabase
+    .from("reservations")
+    .select(
+      "id, kind, status, ride_type, pickup_label, dropoff_label, scheduled_at, created_at, canceled_at",
+    )
+    .eq("status", "pending")
+    .in("kind", ["ride", "scheduled"])
+    .order("scheduled_at", { ascending: true })
+    .limit(limit);
+
+  if (error) {
+    throw new Error(error.message || "Failed to load pending reservation rides.");
+  }
+
+  return (data ?? []).map((row) => mapReservationRow(row as ReservationRow));
+}
+
 export async function cancelReservation(
   id: string,
   userId: string,

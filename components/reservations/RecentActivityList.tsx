@@ -1,5 +1,6 @@
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, Text, TouchableOpacity, View } from "react-native";
 import type { ReservationRecord } from "../../screens/types";
+import { RIDE_OPTION_BY_TYPE } from "../../constants/rideOptions";
 import { formatDatetime, formatStatusLabel } from "../../helpers/reservations/reservationFormat";
 import { getStatusClasses } from "../../helpers/reservations/statusStyles";
 
@@ -16,31 +17,62 @@ type RecentActivityCardProps = {
 
 function RecentActivityCard({ reservation, onSelectReservation }: RecentActivityCardProps) {
   const statusClasses = getStatusClasses(reservation.status);
+  const rideImage = RIDE_OPTION_BY_TYPE[reservation.rideType]?.source;
 
   return (
     <TouchableOpacity
       onPress={() => onSelectReservation(reservation.id)}
-      activeOpacity={0.8}
-      className="bg-neutral-900 rounded-2xl p-4 border border-neutral-800"
+      activeOpacity={0.7}
+      className="rounded-2xl p-4 border bg-neutral-900 border-neutral-800"
     >
-      <View className="flex-row items-center justify-between mb-2">
-        <View className="flex-row items-center gap-2">
-          <View className={`w-2 h-2 rounded-full ${statusClasses.dot}`} />
-          <Text className="text-white font-semibold text-sm">{reservation.rideType}</Text>
+      {/* Top row: image + info + status badge */}
+      <View className="flex-row items-center">
+        {/* Vehicle thumbnail */}
+        {rideImage ? (
+          <View
+            className="mr-3 h-12 w-16 items-center justify-center rounded-xl bg-neutral-800"
+          >
+            <Image source={rideImage} className="h-8 w-14" resizeMode="contain" />
+          </View>
+        ) : null}
+
+        {/* Ride type + scheduled time */}
+        <View className="flex-1">
+          <Text className="text-white font-semibold text-sm">
+            {reservation.rideType}
+          </Text>
+          <Text className="text-neutral-400 text-xs mt-0.5">
+            {formatDatetime(reservation.scheduledAt)}
+          </Text>
         </View>
-        <View className={`px-2 py-1 rounded-full border ${statusClasses.chip}`}>
+
+        {/* Status chip */}
+        <View className={`rounded-full border px-2.5 py-1 ${statusClasses.chip}`}>
           <Text className={`text-xs font-medium ${statusClasses.text}`}>
             {formatStatusLabel(reservation.status)}
           </Text>
         </View>
       </View>
 
-      <Text className="text-neutral-300 text-sm">{formatDatetime(reservation.scheduledAt)}</Text>
-      <Text className="text-neutral-500 text-xs mt-1" numberOfLines={1}>
-        {reservation.pickupLabel}
-        {" -> "}
-        {reservation.dropoffLabel}
-      </Text>
+      {/* Route: pickup → dropoff */}
+      <View className="mt-3 ml-1 flex-row items-center">
+        <View className="items-center mr-2.5">
+          <View className="h-2 w-2 rounded-full border-[1.5px] border-green-500 bg-green-500/30" />
+          <View className="w-[1.5px] h-2.5 bg-neutral-700 my-0.5" />
+          <View className="h-2 w-2 rounded-full border-[1.5px] border-violet-500 bg-violet-500/30" />
+        </View>
+        <View className="flex-1">
+          <Text className="text-neutral-300 text-xs" numberOfLines={1}>
+            {reservation.pickupLabel}
+          </Text>
+          <Text className="text-neutral-500 text-xs mt-1" numberOfLines={1}>
+            {reservation.dropoffLabel}
+          </Text>
+        </View>
+        {/* Chevron */}
+        <Text className="text-neutral-600 text-sm ml-2">›</Text>
+      </View>
+
     </TouchableOpacity>
   );
 }
@@ -68,7 +100,7 @@ export function RecentActivityList({
   }
 
   return (
-    <View className="gap-2">
+    <View className="gap-3">
       {reservations.map((reservation) => (
         <RecentActivityCard
           key={reservation.id}
