@@ -12,7 +12,7 @@ export type AccountRole = "rider" | "driver";
 
 export type RideType = "Economy" | "XL" | "Luxury" | "Luxury SUV";
 export type ReservationKind = "scheduled" | "ride" | "package";
-export type ReservationStatus = "pending" | "accepted" | "canceled";
+export type ReservationStatus = "pending" | "accepted" | "completed" | "canceled";
 
 /** Schedule form state held for the schedule flow; ready for API submission. */
 export type SchedulePayload = {

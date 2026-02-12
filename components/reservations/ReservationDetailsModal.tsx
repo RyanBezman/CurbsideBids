@@ -1,10 +1,18 @@
-import { ActivityIndicator, Alert, Image, Modal, Pressable, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import type { ReservationRecord } from "../../screens/types";
 import { RIDE_OPTION_BY_TYPE } from "../../constants/rideOptions";
 import {
   formatDatetime,
   formatStatusLabel,
-  shortId,
 } from "../../helpers/reservations/reservationFormat";
 import { getStatusClasses } from "../../helpers/reservations/statusStyles";
 
@@ -21,9 +29,14 @@ export function ReservationDetailsModal({
   onRequestClose,
   onCancelReservation,
 }: Props) {
-  const rideImage = reservation ? RIDE_OPTION_BY_TYPE[reservation.rideType].source : null;
-  const statusClasses = reservation ? getStatusClasses(reservation.status) : null;
-  const canCancel = reservation?.status === "pending" || reservation?.status === "accepted";
+  const rideImage = reservation
+    ? RIDE_OPTION_BY_TYPE[reservation.rideType].source
+    : null;
+  const statusClasses = reservation
+    ? getStatusClasses(reservation.status)
+    : null;
+  const canCancel =
+    reservation?.status === "pending" || reservation?.status === "accepted";
 
   const handleConfirmCancelRide = () => {
     if (!reservation || isCancelingReservation) return;
@@ -38,7 +51,10 @@ export function ReservationDetailsModal({
             try {
               await onCancelReservation(reservation.id);
               onRequestClose();
-              Alert.alert("Ride canceled", "This reservation has been canceled.");
+              Alert.alert(
+                "Ride canceled",
+                "This reservation has been canceled.",
+              );
             } catch (error) {
               const message =
                 error instanceof Error
@@ -63,89 +79,141 @@ export function ReservationDetailsModal({
       }}
     >
       <Pressable
-        className="flex-1 bg-black/60 justify-end"
+        className="flex-1 justify-end bg-black/60"
         onPress={() => {
           if (isCancelingReservation) return;
           onRequestClose();
         }}
       >
         <Pressable
-          className="bg-neutral-900 rounded-t-3xl px-5 pt-5 pb-8 border-t border-neutral-700"
+          className="rounded-t-3xl border-t border-violet-500/20 bg-neutral-900 px-5 pb-8 pt-3"
           onPress={() => {}}
         >
           {reservation && statusClasses && rideImage ? (
             <>
-              <View className="flex-row items-center justify-between mb-4">
-                <Text className="text-white text-xl font-semibold">Ride details</Text>
+              {/* ── Drag handle ── */}
+              <View className="mb-4 items-center">
+                <View className="h-1 w-10 rounded-full bg-violet-500/40" />
+              </View>
+
+              {/* ── Header: title + close ── */}
+              <View className="mb-5 flex-row items-center justify-between">
+                <Text className="text-xl font-bold text-white">
+                  Ride details
+                </Text>
                 <TouchableOpacity
                   onPress={() => {
                     if (isCancelingReservation) return;
                     onRequestClose();
                   }}
                   disabled={isCancelingReservation}
-                  className="w-8 h-8 rounded-full bg-neutral-800 items-center justify-center"
+                  className="h-9 w-9 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800"
                 >
-                  <Text className="text-neutral-300 text-base">✕</Text>
+                  <Text className="text-sm text-neutral-400">✕</Text>
                 </TouchableOpacity>
               </View>
 
-              <View className="bg-neutral-950 rounded-2xl p-4 border border-neutral-800">
-                <View className="flex-row items-center justify-between mb-3">
-                  <Text className="text-white font-semibold text-base">{reservation.rideType}</Text>
-                  <View className={`px-2 py-1 rounded-full border ${statusClasses.chip}`}>
-                    <Text className={`text-xs font-medium ${statusClasses.text}`}>
-                      {formatStatusLabel(reservation.status)}
+              {/* ── Hero image ── */}
+              <View className="mb-5 rounded-2xl border border-violet-500/15 bg-neutral-950 p-3">
+                <Image
+                  source={rideImage}
+                  className="h-28 w-full"
+                  resizeMode="contain"
+                />
+              </View>
+
+              {/* ── Ride type + status row ── */}
+              <View className="mb-5 flex-row items-center justify-between">
+                <Text className="text-lg font-semibold text-white">
+                  {reservation.rideType}
+                </Text>
+                <View
+                  className={`rounded-full border px-3 py-1 ${statusClasses.chip}`}
+                >
+                  <Text
+                    className={`text-xs font-medium ${statusClasses.text}`}
+                  >
+                    {formatStatusLabel(reservation.status)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* ── Schedule ── */}
+              <View className="mb-4 flex-row items-center rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-3">
+                <View className="mr-3 h-2.5 w-2.5 rounded-full bg-amber-400" />
+                <View className="flex-1">
+                  <Text className="text-xs uppercase tracking-wide text-neutral-500">
+                    Scheduled for
+                  </Text>
+                  <Text className="mt-0.5 text-sm font-medium text-white">
+                    {formatDatetime(reservation.scheduledAt)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* ── Route timeline (pickup → dropoff) ── */}
+              <View className="rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-4">
+                {/* Pickup */}
+                <View className="flex-row">
+                  <View className="mr-3 items-center pt-2">
+                    <View className="h-3 w-3 rounded-full border-2 border-green-500 bg-green-500/30" />
+                    <View className="my-1 w-0.5 flex-1 bg-neutral-700" />
+                  </View>
+                  <View className="flex-1 pb-4">
+                    <Text className="text-xs uppercase tracking-wide text-neutral-500">
+                      Pickup
+                    </Text>
+                    <Text className="mt-0.5 text-sm leading-5 text-white">
+                      {reservation.pickupLabel}
                     </Text>
                   </View>
                 </View>
 
-                <Image
-                  source={rideImage}
-                  className="w-full h-28 bg-neutral-900 rounded-xl mb-4"
-                  resizeMode="contain"
-                />
+                {/* Dropoff */}
+                <View className="flex-row">
+                  <View className="mr-3 items-center pt-2">
+                    <View className="h-3 w-3 rounded-full border-2 border-violet-500 bg-violet-500/30" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-xs uppercase tracking-wide text-neutral-500">
+                      Dropoff
+                    </Text>
+                    <Text className="mt-0.5 text-sm leading-5 text-white">
+                      {reservation.dropoffLabel}
+                    </Text>
+                  </View>
+                </View>
+              </View>
 
-                <Text className="text-neutral-400 text-xs uppercase tracking-wide mb-1">
-                  Scheduled for
-                </Text>
-                <Text className="text-white text-sm mb-3">{formatDatetime(reservation.scheduledAt)}</Text>
-
-                <Text className="text-neutral-400 text-xs uppercase tracking-wide mb-1">Pickup</Text>
-                <Text className="text-white text-sm mb-3">{reservation.pickupLabel}</Text>
-
-                <Text className="text-neutral-400 text-xs uppercase tracking-wide mb-1">Dropoff</Text>
-                <Text className="text-white text-sm mb-3">{reservation.dropoffLabel}</Text>
-
-                <Text className="text-neutral-500 text-xs">Reservation {shortId(reservation.id)}</Text>
-                <Text className="text-neutral-500 text-xs mt-1">
+              {/* ── Footer: booked date ── */}
+              <View className="mt-4 px-1">
+                <Text className="text-xs text-neutral-500 text-center">
                   Booked {formatDatetime(reservation.createdAt)}
                 </Text>
               </View>
 
-              {isCancelingReservation ? (
-                <View className="mt-4 bg-amber-500/15 border border-amber-400/30 rounded-2xl px-4 py-3 flex-row items-center gap-2">
-                  <ActivityIndicator color="#fcd34d" size="small" />
-                  <Text className="text-amber-200 text-sm">Canceling ride...</Text>
-                </View>
-              ) : null}
-
+              {/* ── Cancel button ── */}
               {canCancel ? (
                 <TouchableOpacity
                   onPress={handleConfirmCancelRide}
                   disabled={isCancelingReservation}
-                  className={`mt-4 rounded-2xl py-3 border ${
+                  className={`mt-5 rounded-2xl border py-3.5 ${
                     isCancelingReservation
-                      ? "bg-rose-500/20 border-rose-500/30"
-                      : "bg-rose-500/25 border-rose-400/50"
+                      ? "border-rose-500/25 bg-rose-500/10"
+                      : "border-rose-400/45 bg-rose-500/15"
                   }`}
                 >
                   {isCancelingReservation ? (
                     <View className="flex-row items-center justify-center gap-2">
                       <ActivityIndicator color="#fda4af" size="small" />
-                      <Text className="text-rose-200 text-center font-semibold">Canceling...</Text>
+                      <Text className="text-center font-semibold text-rose-200">
+                        Canceling...
+                      </Text>
                     </View>
                   ) : (
-                    <Text className="text-rose-200 text-center font-semibold">Cancel ride</Text>
+                    <Text className="text-center font-semibold text-rose-200">
+                      Cancel ride
+                    </Text>
                   )}
                 </TouchableOpacity>
               ) : null}

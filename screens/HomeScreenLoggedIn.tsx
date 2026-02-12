@@ -1,6 +1,6 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
-import { SafeAreaView, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import type { User } from "@supabase/supabase-js";
 import {
   NearbyDriversCard,
@@ -64,7 +64,11 @@ export function HomeScreenLoggedIn({
     <SafeAreaView className="flex-1 bg-neutral-950">
       <StatusBar style="light" />
 
-      <View className="flex-1 px-5 pt-6">
+      <ScrollView
+        className="flex-1 px-5 pt-6"
+        contentContainerStyle={{ paddingBottom: 24 }}
+        showsVerticalScrollIndicator={false}
+      >
         <View className="flex-row items-center justify-between mb-8">
           <View>
             <Text className="text-3xl font-bold text-white tracking-tight">Curbside</Text>
@@ -127,7 +131,7 @@ export function HomeScreenLoggedIn({
             />
           </>
         )}
-      </View>
+      </ScrollView>
 
       <ReservationDetailsModal
         reservation={selectedReservation}

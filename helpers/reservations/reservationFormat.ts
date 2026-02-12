@@ -12,6 +12,7 @@ export function formatDatetime(iso: string): string {
 export function formatStatusLabel(status: ReservationRecord["status"]): string {
   if (status === "pending") return "Pending";
   if (status === "accepted") return "Accepted";
+  if (status === "completed") return "Completed";
   return "Canceled";
 }
 
