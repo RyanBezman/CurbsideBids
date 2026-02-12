@@ -1,9 +1,17 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useState } from "react";
-import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import type { User } from "@supabase/supabase-js";
 import {
   NearbyDriversCard,
+  PendingReservationCard,
   ProfileCard,
   QuickActionRow,
   RecentActivityList,
@@ -28,6 +36,12 @@ function getUserRole(user: User): "rider" | "driver" {
   return rawRole === "driver" ? "driver" : "rider";
 }
 
+function getMinutesUntilScheduled(iso: string): number {
+  const scheduled = new Date(iso).getTime();
+  const diffMs = scheduled - Date.now();
+  return Math.max(0, Math.round(diffMs / (60 * 1000)));
+}
+
 export function HomeScreenLoggedIn({
   user,
   onSignOut,
@@ -41,6 +55,8 @@ export function HomeScreenLoggedIn({
   const isDriver = role === "driver";
   const [quickAction, setQuickAction] = useState<QuickAction | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
+  const [acceptingReservationId, setAcceptingReservationId] = useState<string | null>(null);
+  const [acceptedReservationIds, setAcceptedReservationIds] = useState<string[]>([]);
 
   const selectedReservation = useMemo(
     () =>
@@ -102,8 +118,60 @@ export function HomeScreenLoggedIn({
               <View className="flex-1 rounded-2xl py-5 items-center border bg-neutral-900 border-neutral-800">
                 <Text className="text-xl mb-1">📋</Text>
                 <Text className="font-semibold text-sm text-neutral-300">Requests</Text>
-                <Text className="text-xs text-neutral-500 mt-1">0 pending</Text>
+                <Text className="text-xs text-neutral-500 mt-1">
+                  {recentReservations.length} pending
+                </Text>
               </View>
+            </View>
+
+            <Text className="text-white text-lg font-semibold mb-4">
+              Pending Reservation Rides
+            </Text>
+            <View className="mb-8">
+              {isLoadingRecentReservations ? (
+                <View className="bg-neutral-900 rounded-2xl px-5 py-5 border border-neutral-800">
+                  <Text className="text-neutral-400 text-sm text-center">
+                    Loading pending rides...
+                  </Text>
+                </View>
+              ) : recentReservations.length === 0 ? (
+                <View className="bg-neutral-900 rounded-2xl px-5 py-5 border border-neutral-800">
+                  <Text className="text-neutral-400 text-sm text-center">
+                    No pending reservation rides right now.
+                  </Text>
+                </View>
+              ) : (
+                <View className="gap-3">
+                  {recentReservations.map((reservation) => {
+                    const isAccepting = acceptingReservationId === reservation.id;
+                    const isAccepted = acceptedReservationIds.includes(reservation.id);
+                    const etaMinutes = getMinutesUntilScheduled(reservation.scheduledAt);
+
+                    return (
+                      <PendingReservationCard
+                        key={reservation.id}
+                        reservation={reservation}
+                        etaMinutes={etaMinutes}
+                        isAccepting={isAccepting}
+                        isAccepted={isAccepted}
+                        onAccept={() => {
+                          setAcceptingReservationId(reservation.id);
+                          setTimeout(() => {
+                            setAcceptingReservationId(null);
+                            setAcceptedReservationIds((prev) =>
+                              prev.includes(reservation.id) ? prev : [...prev, reservation.id],
+                            );
+                            Alert.alert(
+                              "Ride accepted",
+                              "This ride is marked accepted in the UI. Backend assignment wiring is next.",
+                            );
+                          }, 500);
+                        }}
+                      />
+                    );
+                  })}
+                </View>
+              )}
             </View>
 
             <View className="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">

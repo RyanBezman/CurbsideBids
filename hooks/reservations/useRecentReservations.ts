@@ -1,7 +1,16 @@
 import { useCallback, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { cancelReservation, listRecentReservations } from "../../lib/reservations";
+import {
+  cancelReservation,
+  listPendingRideReservations,
+  listRecentReservations,
+} from "../../lib/reservations";
 import type { ReservationRecord } from "../../screens/types";
+
+function getUserRole(user: User | null): "rider" | "driver" {
+  const rawRole = user?.user_metadata?.role;
+  return rawRole === "driver" ? "driver" : "rider";
+}
 
 export function useRecentReservations(user: User | null) {
   const [recentReservations, setRecentReservations] = useState<ReservationRecord[]>([]);
@@ -20,7 +29,10 @@ export function useRecentReservations(user: User | null) {
       setIsLoadingRecentReservations(true);
 
       try {
-        const reservations = await listRecentReservations(userId, 10);
+        const reservations =
+          getUserRole(user) === "driver"
+            ? await listPendingRideReservations(100)
+            : await listRecentReservations(userId, 10);
         setRecentReservations(reservations);
       } catch (error) {
         console.warn("Unable to load recent reservations", error);
@@ -36,6 +48,9 @@ export function useRecentReservations(user: User | null) {
     async (reservationId: string) => {
       if (!user) {
         throw new Error("You need to be signed in to cancel a ride.");
+      }
+      if (getUserRole(user) === "driver") {
+        throw new Error("Drivers cannot cancel rider reservations.");
       }
 
       setIsCancelingReservation(true);
