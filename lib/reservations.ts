@@ -112,7 +112,7 @@ export async function listPendingRideReservations(
     )
     .eq("status", "pending")
     .in("kind", ["ride", "scheduled"])
-    .order("scheduled_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(limit);
 
   if (error) {

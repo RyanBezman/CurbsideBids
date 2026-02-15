@@ -1,11 +1,15 @@
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
+  LayoutAnimation,
+  Platform,
   SafeAreaView,
   ScrollView,
   Text,
   TouchableOpacity,
+  UIManager,
   View,
 } from "react-native";
 import type { User } from "@supabase/supabase-js";
@@ -27,6 +31,7 @@ type Props = {
   onNavigate: (screen: Screen) => void;
   recentReservations: ReservationRecord[];
   isLoadingRecentReservations: boolean;
+  isSyncingNewPendingReservation: boolean;
   isCancelingReservation: boolean;
   onCancelReservation: (id: string) => Promise<void>;
 };
@@ -48,6 +53,7 @@ export function HomeScreenLoggedIn({
   onNavigate,
   recentReservations,
   isLoadingRecentReservations,
+  isSyncingNewPendingReservation,
   isCancelingReservation,
   onCancelReservation,
 }: Props) {
@@ -57,6 +63,7 @@ export function HomeScreenLoggedIn({
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [acceptingReservationId, setAcceptingReservationId] = useState<string | null>(null);
   const [acceptedReservationIds, setAcceptedReservationIds] = useState<string[]>([]);
+  const previousReservationIdsRef = useRef<string[]>([]);
 
   const selectedReservation = useMemo(
     () =>
@@ -75,6 +82,28 @@ export function HomeScreenLoggedIn({
       setSelectedReservationId(null);
     }
   }, [recentReservations, selectedReservationId]);
+
+  useEffect(() => {
+    if (!isDriver) return;
+
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+
+    const previousIds = previousReservationIdsRef.current;
+    const nextIds = recentReservations.map((reservation) => reservation.id);
+    const nextTopId = nextIds[0];
+    const hasNewTopReservation = Boolean(nextTopId) && !previousIds.includes(nextTopId);
+
+    if (previousIds.length > 0 && hasNewTopReservation) {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    }
+
+    previousReservationIdsRef.current = nextIds;
+  }, [isDriver, recentReservations]);
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-950">
@@ -102,13 +131,6 @@ export function HomeScreenLoggedIn({
 
         {isDriver ? (
           <>
-            <View className="bg-neutral-900 rounded-2xl px-5 py-4 mb-6 border border-neutral-800">
-              <Text className="text-white text-base font-semibold mb-1">Driver Dashboard</Text>
-              <Text className="text-neutral-400 text-sm">
-                Driver tools are being rolled out in phases. You are set up as a driver account.
-              </Text>
-            </View>
-
             <View className="flex-row gap-3 mb-8">
               <View className="flex-1 rounded-2xl py-5 items-center border bg-neutral-900 border-neutral-800">
                 <Text className="text-xl mb-1">🚘</Text>
@@ -127,8 +149,14 @@ export function HomeScreenLoggedIn({
             <Text className="text-white text-lg font-semibold mb-4">
               Pending Reservation Rides
             </Text>
+            {isSyncingNewPendingReservation ? (
+              <View className="flex-row items-center gap-2 mb-3">
+                <ActivityIndicator size="small" color="#a3a3a3" />
+                <Text className="text-xs text-neutral-400">Adding new request...</Text>
+              </View>
+            ) : null}
             <View className="mb-8">
-              {isLoadingRecentReservations ? (
+              {isLoadingRecentReservations && recentReservations.length === 0 ? (
                 <View className="bg-neutral-900 rounded-2xl px-5 py-5 border border-neutral-800">
                   <Text className="text-neutral-400 text-sm text-center">
                     Loading pending rides...

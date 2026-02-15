@@ -65,6 +65,7 @@ export default function App() {
     handleCancelReservation,
     isCancelingReservation,
     isLoadingRecentReservations,
+    isSyncingNewPendingReservation,
     loadRecentReservations,
     recentReservations,
     resetRecentReservations,
@@ -174,6 +175,7 @@ export default function App() {
                 onNavigate={onNavigate}
                 recentReservations={recentReservations}
                 isLoadingRecentReservations={isLoadingRecentReservations}
+                isSyncingNewPendingReservation={isSyncingNewPendingReservation}
                 isCancelingReservation={isCancelingReservation}
                 onCancelReservation={handleCancelReservation}
               />

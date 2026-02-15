@@ -19,6 +19,10 @@ type RealtimeReservationRow = {
   status?: string | null;
 };
 
+type LoadRecentReservationsOptions = {
+  showLoading?: boolean;
+};
+
 function getReservationRow(value: unknown): RealtimeReservationRow {
   if (!value || typeof value !== "object") return {};
 
@@ -29,17 +33,24 @@ export function useRecentReservations(user: User | null) {
   const [recentReservations, setRecentReservations] = useState<ReservationRecord[]>([]);
   const [isLoadingRecentReservations, setIsLoadingRecentReservations] = useState(false);
   const [isCancelingReservation, setIsCancelingReservation] = useState(false);
+  const [isSyncingNewPendingReservation, setIsSyncingNewPendingReservation] = useState(false);
 
   const loadRecentReservations = useCallback(
-    async (targetUserId?: string) => {
+    async (
+      targetUserId?: string,
+      options: LoadRecentReservationsOptions = { showLoading: true },
+    ) => {
       const userId = targetUserId ?? user?.id;
+      const showLoading = options.showLoading ?? true;
       if (!userId) {
         setRecentReservations([]);
         setIsLoadingRecentReservations(false);
         return;
       }
 
-      setIsLoadingRecentReservations(true);
+      if (showLoading) {
+        setIsLoadingRecentReservations(true);
+      }
 
       try {
         const reservations =
@@ -49,9 +60,13 @@ export function useRecentReservations(user: User | null) {
         setRecentReservations(reservations);
       } catch (error) {
         console.warn("Unable to load recent reservations", error);
-        setRecentReservations([]);
+        if (showLoading) {
+          setRecentReservations([]);
+        }
       } finally {
-        setIsLoadingRecentReservations(false);
+        if (showLoading) {
+          setIsLoadingRecentReservations(false);
+        }
       }
     },
     [user],
@@ -70,6 +85,10 @@ export function useRecentReservations(user: User | null) {
         (payload) => {
           const previous = getReservationRow(payload.old);
           const next = getReservationRow(payload.new);
+          const isPendingRideInsert =
+            payload.eventType === "INSERT" &&
+            next.status === "pending" &&
+            (next.kind === "ride" || next.kind === "scheduled");
 
           const touchesUserReservation =
             previous.user_id === user.id || next.user_id === user.id;
@@ -79,7 +98,15 @@ export function useRecentReservations(user: User | null) {
             (next.status === "pending" && (next.kind === "ride" || next.kind === "scheduled"));
 
           if ((isDriver && touchesDriverPendingReservation) || touchesUserReservation) {
-            void loadRecentReservations(user.id);
+            if (isDriver && isPendingRideInsert) {
+              setIsSyncingNewPendingReservation(true);
+            }
+
+            void loadRecentReservations(user.id, { showLoading: false }).finally(() => {
+              if (isDriver && isPendingRideInsert) {
+                setIsSyncingNewPendingReservation(false);
+              }
+            });
           }
         },
       )
@@ -95,7 +122,7 @@ export function useRecentReservations(user: User | null) {
     if (getUserRole(user) !== "driver") return;
 
     const intervalId = setInterval(() => {
-      void loadRecentReservations(user.id);
+      void loadRecentReservations(user.id, { showLoading: false });
     }, 15000);
 
     return () => {
@@ -133,6 +160,7 @@ export function useRecentReservations(user: User | null) {
     handleCancelReservation,
     isCancelingReservation,
     isLoadingRecentReservations,
+    isSyncingNewPendingReservation,
     loadRecentReservations,
     recentReservations,
     resetRecentReservations,
