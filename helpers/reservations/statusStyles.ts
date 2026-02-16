@@ -25,9 +25,17 @@ export function getStatusClasses(status: ReservationRecord["status"]) {
     };
   }
 
+  if (status === "canceled") {
+    return {
+      chip: "bg-rose-500/20 border-rose-400/40",
+      text: "text-rose-300",
+      dot: "bg-rose-400",
+    };
+  }
+
   return {
-    chip: "bg-rose-500/20 border-rose-400/40",
-    text: "text-rose-300",
-    dot: "bg-rose-400",
+    chip: "bg-neutral-600/20 border-neutral-500/40",
+    text: "text-neutral-300",
+    dot: "bg-neutral-400",
   };
 }

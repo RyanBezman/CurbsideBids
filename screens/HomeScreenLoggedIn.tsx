@@ -19,6 +19,7 @@ import {
   ProfileCard,
   QuickActionRow,
   RecentActivityList,
+  ReservationProgressTimeline,
   ReservationDetailsModal,
   TripSearchCard,
   type QuickAction,
@@ -64,6 +65,20 @@ export function HomeScreenLoggedIn({
   const [acceptingReservationId, setAcceptingReservationId] = useState<string | null>(null);
   const [acceptedReservationIds, setAcceptedReservationIds] = useState<string[]>([]);
   const previousReservationIdsRef = useRef<string[]>([]);
+  const activeReservationForTimeline = useMemo(() => {
+    if (recentReservations.length === 0) return null;
+
+    return (
+      recentReservations.find(
+        (reservation) =>
+          reservation.status !== "completed" && reservation.status !== "canceled",
+      ) ?? null
+    );
+  }, [recentReservations]);
+  const recentActivityReservations = useMemo(
+    () => recentReservations.filter((reservation) => reservation.status !== "pending"),
+    [recentReservations],
+  );
 
   const selectedReservation = useMemo(
     () =>
@@ -211,6 +226,13 @@ export function HomeScreenLoggedIn({
           </>
         ) : (
           <>
+            {activeReservationForTimeline ? (
+              <ReservationProgressTimeline
+                reservation={activeReservationForTimeline}
+                isCancelingReservation={isCancelingReservation}
+                onCancelReservation={onCancelReservation}
+              />
+            ) : null}
             <TripSearchCard quickAction={quickAction} onNavigate={onNavigate} />
             <QuickActionRow
               quickAction={quickAction}
@@ -219,9 +241,9 @@ export function HomeScreenLoggedIn({
             />
             <NearbyDriversCard />
 
-            <Text className="text-white text-lg font-semibold mb-4">Recent Activity</Text>
+            <Text className="text-white text-lg font-semibold mb-4">Recent Trips</Text>
             <RecentActivityList
-              reservations={recentReservations}
+              reservations={recentActivityReservations}
               isLoading={isLoadingRecentReservations}
               onSelectReservation={setSelectedReservationId}
             />

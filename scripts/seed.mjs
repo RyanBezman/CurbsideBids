@@ -183,6 +183,24 @@ async function createSeedUsers() {
 
 function buildSeedReservationsForUser(userId, userSeed) {
   const rows = [];
+  const statusTimeline = [
+    "completed",
+    "completed",
+    "canceled",
+    "completed",
+    "completed",
+    "completed",
+    "canceled",
+    "completed",
+    "completed",
+    "completed",
+    "completed",
+    "canceled",
+    "completed",
+    "completed",
+    "completed",
+    "completed",
+  ];
 
   for (let i = 0; i < 16; i += 1) {
     const pairSeed = userSeed * 31 + i;
@@ -190,27 +208,11 @@ function buildSeedReservationsForUser(userId, userSeed) {
     const rideType = pickFrom(rideTypes, pairSeed);
     const kind = pickFrom(rideKinds, pairSeed + 7);
 
-    let status = "pending";
-    let scheduledAtHours = 2 + (i % 10);
-    let createdAtHours = -(72 - i * 5);
+    const status = statusTimeline[i];
+    const createdAtHours = -(240 - i * 12);
+    const scheduledAtHours = createdAtHours + 4;
     let canceledAt = null;
-
-    const statusSlot = i % 4;
-
-    if (statusSlot === 1) {
-      status = "accepted";
-      scheduledAtHours = -(36 - i * 2);
-      createdAtHours = -(84 - i * 4);
-    } else if (statusSlot === 2) {
-      status = "completed";
-      scheduledAtHours = -(22 - i);
-      createdAtHours = -(96 - i * 3);
-    } else if (statusSlot === 3) {
-      status = "canceled";
-      scheduledAtHours = -(18 - i);
-      createdAtHours = -(96 - i * 3);
-      canceledAt = isoAtHoursFromNow(-(12 - i));
-    }
+    if (status === "canceled") canceledAt = isoAtHoursFromNow(scheduledAtHours + 2);
 
     rows.push({
       user_id: userId,

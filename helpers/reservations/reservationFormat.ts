@@ -13,7 +13,8 @@ export function formatStatusLabel(status: ReservationRecord["status"]): string {
   if (status === "pending") return "Pending";
   if (status === "accepted") return "Accepted";
   if (status === "completed") return "Completed";
-  return "Canceled";
+  if (status === "canceled") return "Canceled";
+  return "In progress";
 }
 
 export function shortId(id: string): string {
