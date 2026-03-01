@@ -5,7 +5,7 @@ import { formatDatetime } from "../../reservations";
 
 type PendingReservationCardProps = {
   reservation: ReservationRecord;
-  etaMinutes: number;
+  estimatedTripMinutes: number | null;
   isAccepting: boolean;
   isAccepted: boolean;
   onAccept: () => void;
@@ -13,7 +13,7 @@ type PendingReservationCardProps = {
 
 export function PendingReservationCard({
   reservation,
-  etaMinutes,
+  estimatedTripMinutes,
   isAccepting,
   isAccepted,
   onAccept,
@@ -40,7 +40,9 @@ export function PendingReservationCard({
         </View>
 
         <View className="px-2.5 py-1 rounded-full bg-neutral-800 border border-neutral-700">
-          <Text className="text-neutral-300 text-xs">{etaMinutes} min</Text>
+          <Text className="text-neutral-300 text-xs">
+            {estimatedTripMinutes === null ? "N/A" : `~${estimatedTripMinutes} min`}
+          </Text>
         </View>
       </View>
 

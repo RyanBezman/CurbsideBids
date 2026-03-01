@@ -36,7 +36,9 @@ export type ReservationRecord = {
   status: ReservationStatus;
   rideType: RideType;
   pickupLabel: string;
+  pickupLocation: LocationPoint | null;
   dropoffLabel: string;
+  dropoffLocation: LocationPoint | null;
   scheduledAt: string;
   createdAt: string;
   canceledAt: string | null;

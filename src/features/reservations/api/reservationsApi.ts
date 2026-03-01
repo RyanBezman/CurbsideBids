@@ -18,7 +18,11 @@ type ReservationRow = {
   status: ReservationStatus;
   ride_type: ReservationRecord["rideType"];
   pickup_label: string;
+  pickup_lat: number | null;
+  pickup_lng: number | null;
   dropoff_label: string;
+  dropoff_lat: number | null;
+  dropoff_lng: number | null;
   scheduled_at: string;
   created_at: string;
   canceled_at: string | null;
@@ -28,6 +32,21 @@ function nullableLocationPoint(value: LocationPoint | null | undefined): Locatio
   return value ?? null;
 }
 
+function mapStoredLocationPoint(
+  label: string,
+  latitude: number | null,
+  longitude: number | null,
+): LocationPoint | null {
+  if (latitude === null || longitude === null) return null;
+
+  return {
+    label,
+    latitude,
+    longitude,
+    provider: "nominatim",
+  };
+}
+
 function mapReservationRow(row: ReservationRow): ReservationRecord {
   return {
     id: row.id,
@@ -35,7 +54,9 @@ function mapReservationRow(row: ReservationRow): ReservationRecord {
     status: row.status,
     rideType: row.ride_type,
     pickupLabel: row.pickup_label,
+    pickupLocation: mapStoredLocationPoint(row.pickup_label, row.pickup_lat, row.pickup_lng),
     dropoffLabel: row.dropoff_label,
+    dropoffLocation: mapStoredLocationPoint(row.dropoff_label, row.dropoff_lat, row.dropoff_lng),
     scheduledAt: row.scheduled_at,
     createdAt: row.created_at,
     canceledAt: row.canceled_at,
@@ -96,7 +117,7 @@ export async function listRecentReservations(
   const { data, error } = await supabase
     .from("reservations")
     .select(
-      "id, kind, status, ride_type, pickup_label, dropoff_label, scheduled_at, created_at, canceled_at",
+      "id, kind, status, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -115,7 +136,7 @@ export async function listPendingRideReservations(
   const { data, error } = await supabase
     .from("reservations")
     .select(
-      "id, kind, status, ride_type, pickup_label, dropoff_label, scheduled_at, created_at, canceled_at",
+      "id, kind, status, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
     )
     .eq("status", "pending")
     .in("kind", ["ride", "scheduled"])
@@ -143,7 +164,7 @@ export async function cancelReservation(
     .eq("user_id", userId)
     .in("status", ["pending", "accepted"])
     .select(
-      "id, kind, status, ride_type, pickup_label, dropoff_label, scheduled_at, created_at, canceled_at",
+      "id, kind, status, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
     )
     .single();
 

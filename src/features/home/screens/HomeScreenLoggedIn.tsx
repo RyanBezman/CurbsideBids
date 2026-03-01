@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import type { User } from "@supabase/supabase-js";
 import type { AppRouteName } from "../../../app/navigation";
+import { estimateTripDurationMinutes } from "../../../domain/location";
 import type { ReservationRecord } from "../../../domain/reservations";
 import { getUserRole } from "../../../domain/user";
 import {
@@ -40,12 +41,6 @@ type HomeScreenLoggedInProps = {
   isCancelingReservation: boolean;
   onCancelReservation: (id: string) => Promise<void>;
 };
-
-function getMinutesUntilScheduled(iso: string): number {
-  const scheduled = new Date(iso).getTime();
-  const diffMs = scheduled - Date.now();
-  return Math.max(0, Math.round(diffMs / (60 * 1000)));
-}
 
 export function HomeScreenLoggedIn({
   user,
@@ -186,13 +181,16 @@ export function HomeScreenLoggedIn({
                   {recentReservations.map((reservation) => {
                     const isAccepting = acceptingReservationId === reservation.id;
                     const isAccepted = acceptedReservationIds.includes(reservation.id);
-                    const etaMinutes = getMinutesUntilScheduled(reservation.scheduledAt);
+                    const estimatedTripMinutes = estimateTripDurationMinutes(
+                      reservation.pickupLocation,
+                      reservation.dropoffLocation,
+                    );
 
                     return (
                       <PendingReservationCard
                         key={reservation.id}
                         reservation={reservation}
-                        etaMinutes={etaMinutes}
+                        estimatedTripMinutes={estimatedTripMinutes}
                         isAccepting={isAccepting}
                         isAccepted={isAccepted}
                         onAccept={() => {
