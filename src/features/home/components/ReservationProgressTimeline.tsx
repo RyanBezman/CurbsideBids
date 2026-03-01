@@ -121,7 +121,7 @@ export function ReservationProgressTimeline({
       </View>
 
       <View className="mt-3 w-full self-center">
-        <View className="mb-2 flex-row items-center justify-between">
+        <View className="mb-1 flex-row items-center justify-between">
           <Text className="text-sm font-medium text-neutral-200">{stepLabel}</Text>
           <Text className="text-xs text-neutral-500">{`Step ${currentStep + 1} of ${TIMELINE_STEPS.length}`}</Text>
         </View>
