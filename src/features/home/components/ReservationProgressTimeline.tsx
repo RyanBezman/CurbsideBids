@@ -68,7 +68,8 @@ export function ReservationProgressTimeline({
   }, [pulse]);
 
   const currentStep = getTimelineStepIndex(reservation.status);
-  const progressPercent = (currentStep / (TIMELINE_STEPS.length - 1)) * 100;
+  // Count the active step itself so "Requested" shows visible progress.
+  const progressPercent = ((currentStep + 1) / TIMELINE_STEPS.length) * 100;
   const stepLabel = TIMELINE_STEPS[currentStep] ?? TIMELINE_STEPS[0];
   const rideImage = RIDE_OPTION_BY_TYPE[reservation.rideType]?.source;
   const canCancelRide =
@@ -103,7 +104,7 @@ export function ReservationProgressTimeline({
   return (
     <View className="mb-6 rounded-2xl border border-neutral-800 bg-neutral-900 p-5">
       <View className="flex-row items-center gap-2">
-        <Text className="text-base font-semibold text-white">Live Ride Status</Text>
+        <Text className="text-base font-semibold text-white">Ride Status</Text>
         <View className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-2 py-0.5">
           <View className="flex-row items-center gap-1.5">
             <Animated.View
@@ -120,7 +121,7 @@ export function ReservationProgressTimeline({
         </View>
       </View>
 
-      <View className="mt-3">
+      <View className="mt-3 w-full self-center">
         <View className="mb-2 flex-row items-center justify-between">
           <Text className="text-sm font-medium text-neutral-200">{stepLabel}</Text>
           <Text className="text-xs text-neutral-500">{`Step ${currentStep + 1} of ${TIMELINE_STEPS.length}`}</Text>
@@ -133,32 +134,33 @@ export function ReservationProgressTimeline({
         </View>
       </View>
 
-      <View className="mt-4 flex-row items-center">
-        {TIMELINE_STEPS.map((step, index) => {
-          const isCompleted = index <= currentStep;
-          const isCurrent = index === currentStep;
+      <View className="mt-4 w-full self-center">
+        <View className="relative h-3.5 w-full justify-center">
+          <View className="absolute left-0 right-0 h-[2px] rounded-full bg-neutral-700" />
+          <View
+            className="absolute left-0 h-[2px] rounded-full bg-violet-500"
+            style={{ width: `${progressPercent}%` }}
+          />
+          <View className="flex-row items-center justify-between">
+            {TIMELINE_STEPS.map((step, index) => {
+              const isCompleted = index <= currentStep;
+              const isCurrent = index === currentStep;
 
-          return (
-            <View key={step} className="flex-1 flex-row items-center">
-              <View
-                className={`h-3.5 w-3.5 rounded-full border ${
-                  isCompleted
-                    ? isCurrent
-                      ? "border-violet-300 bg-violet-400"
-                      : "border-violet-500 bg-violet-500"
-                    : "border-neutral-700 bg-neutral-900"
-                }`}
-              />
-              {index < TIMELINE_STEPS.length - 1 ? (
+              return (
                 <View
-                  className={`mx-1 h-[2px] flex-1 rounded-full ${
-                    isCompleted ? "bg-violet-500" : "bg-neutral-700"
+                  key={step}
+                  className={`h-3.5 w-3.5 rounded-full border ${
+                    isCompleted
+                      ? isCurrent
+                        ? "border-violet-300 bg-violet-400"
+                        : "border-violet-500 bg-violet-500"
+                      : "border-neutral-700 bg-neutral-900"
                   }`}
                 />
-              ) : null}
-            </View>
-          );
-        })}
+              );
+            })}
+          </View>
+        </View>
       </View>
 
       <View className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
