@@ -14,9 +14,8 @@ import { formatDatetime } from "../../reservations";
 
 const TIMELINE_STEPS = [
   "Requested",
-  "Confirmed",
-  "Driver en route",
-  "Picked up",
+  "Accepted",
+  "Active",
   "Completed",
 ] as const;
 
@@ -24,8 +23,8 @@ function getTimelineStepIndex(status: string): number {
   if (status === "pending") return 0;
   if (status === "accepted") return 1;
   if (status === "driver_en_route") return 2;
-  if (status === "picked_up") return 3;
-  if (status === "completed") return 4;
+  if (status === "picked_up") return 2;
+  if (status === "completed") return 3;
   if (status === "canceled") return 0;
   return 0;
 }
@@ -126,12 +125,6 @@ export function ReservationProgressTimeline({
           <Text className="text-sm font-medium text-neutral-200">{stepLabel}</Text>
           <Text className="text-xs text-neutral-500">{`Step ${currentStep + 1} of ${TIMELINE_STEPS.length}`}</Text>
         </View>
-        <View className="h-1.5 w-full overflow-hidden rounded-full bg-neutral-800">
-          <View
-            className="h-full rounded-full bg-violet-500"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </View>
       </View>
 
       <View className="mt-4 w-full self-center">
@@ -167,17 +160,20 @@ export function ReservationProgressTimeline({
         <View className="flex-row items-center gap-3">
           <View className="flex-1">
             <Text className="text-xs uppercase tracking-wide text-neutral-500">Trip</Text>
-            <View className="mt-1 flex-row items-start gap-2">
-              <View className="mt-1 h-2 w-2 rounded-full bg-emerald-400" />
-              <Text className="flex-1 text-xs text-neutral-300" numberOfLines={2}>
-                {reservation.pickupLabel}
-              </Text>
-            </View>
-            <View className="mt-0.5 flex-row items-start gap-2">
-              <View className="mt-1 h-2 w-2 rounded-full bg-violet-400" />
-              <Text className="flex-1 text-xs text-neutral-400" numberOfLines={2}>
-                {reservation.dropoffLabel}
-              </Text>
+            <View className="mt-1 ml-1 flex-row items-center">
+              <View className="items-center mr-2.5">
+                <View className="h-2 w-2 rounded-full border-[1.5px] border-green-500 bg-green-500/30" />
+                <View className="w-[1.5px] h-2.5 bg-neutral-700 my-0.5" />
+                <View className="h-2 w-2 rounded-full border-[1.5px] border-violet-500 bg-violet-500/30" />
+              </View>
+              <View className="flex-1">
+                <Text className="text-neutral-300 text-xs" numberOfLines={1}>
+                  {reservation.pickupLabel}
+                </Text>
+                <Text className="text-neutral-500 text-xs mt-1" numberOfLines={1}>
+                  {reservation.dropoffLabel}
+                </Text>
+              </View>
             </View>
             <Text className="mt-2 text-xs text-neutral-500">
               Scheduled for {formatDatetime(reservation.scheduledAt)}
