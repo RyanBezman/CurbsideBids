@@ -1,4 +1,4 @@
-import type { ReservationRecord } from "../../../domain/reservations";
+import type { ReservationStatus } from "@domain/reservations";
 
 export function formatDatetime(iso: string): string {
   return new Date(iso).toLocaleString("en-US", {
@@ -9,7 +9,7 @@ export function formatDatetime(iso: string): string {
   });
 }
 
-export function formatStatusLabel(status: ReservationRecord["status"]): string {
+export function formatStatusLabel(status: ReservationStatus): string {
   if (status === "pending") return "Pending";
   if (status === "bid_selected") return "Bid Selected";
   if (status === "accepted") return "Accepted";

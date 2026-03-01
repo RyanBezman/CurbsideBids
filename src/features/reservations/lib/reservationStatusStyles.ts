@@ -1,6 +1,6 @@
-import type { ReservationRecord } from "../../../domain/reservations";
+import type { ReservationStatus } from "@domain/reservations";
 
-export function getStatusClasses(status: ReservationRecord["status"]) {
+export function getStatusClasses(status: ReservationStatus) {
   if (status === "pending") {
     return {
       chip: "bg-amber-500/20 border-amber-400/40",

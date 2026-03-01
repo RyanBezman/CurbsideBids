@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { Alert } from "react-native";
-import type { AppRouteName } from "../../../app/navigation";
-import type { AccountRole } from "../../../domain/auth";
-import { supabase } from "../../../shared/api/supabase/client";
-import { formatPhoneForDisplay, normalizePhoneInput } from "../../../shared/lib";
+import type { AppRouteName } from "@app/navigation";
+import type { AccountRole } from "@domain/auth";
+import { supabase } from "@shared/api";
+import { formatPhoneForDisplay, normalizePhoneInput } from "@shared/lib";
 
 type UseAuthFlowOptions = {
   onNavigate: (route: AppRouteName) => void;

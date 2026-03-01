@@ -1,7 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { useState } from "react";
 import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
-import type { AppRouteName } from "../../../app/navigation";
+import type { AppRouteName } from "@app/navigation";
 import {
   HowItWorksSection,
   NearbyDriversCard,

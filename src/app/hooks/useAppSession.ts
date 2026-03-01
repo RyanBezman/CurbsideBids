@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { supabase } from "../../shared/api/supabase/client";
+import { supabase } from "@shared/api";
 
 type UseAppSessionOptions = {
   onAuthStateChange?: (session: Session | null) => void;
