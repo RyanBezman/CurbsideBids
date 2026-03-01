@@ -166,13 +166,19 @@ export function ReservationProgressTimeline({
       <View className="mt-4 rounded-xl border border-neutral-800 bg-neutral-950 p-3">
         <View className="flex-row items-center gap-3">
           <View className="flex-1">
-            <Text className="text-xs uppercase tracking-wide text-neutral-500">Route</Text>
-            <Text className="mt-1 text-xs text-neutral-300" numberOfLines={1}>
-              {reservation.pickupLabel}
-            </Text>
-            <Text className="mt-0.5 text-xs text-neutral-500" numberOfLines={1}>
-              {reservation.dropoffLabel}
-            </Text>
+            <Text className="text-xs uppercase tracking-wide text-neutral-500">Trip</Text>
+            <View className="mt-1 flex-row items-start gap-2">
+              <View className="mt-1 h-2 w-2 rounded-full bg-emerald-400" />
+              <Text className="flex-1 text-xs text-neutral-300" numberOfLines={2}>
+                {reservation.pickupLabel}
+              </Text>
+            </View>
+            <View className="mt-0.5 flex-row items-start gap-2">
+              <View className="mt-1 h-2 w-2 rounded-full bg-violet-400" />
+              <Text className="flex-1 text-xs text-neutral-400" numberOfLines={2}>
+                {reservation.dropoffLabel}
+              </Text>
+            </View>
             <Text className="mt-2 text-xs text-neutral-500">
               Scheduled for {formatDatetime(reservation.scheduledAt)}
             </Text>
