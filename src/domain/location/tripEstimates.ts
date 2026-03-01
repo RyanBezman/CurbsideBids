@@ -5,6 +5,7 @@ const ROAD_DISTANCE_MULTIPLIER = 1.28;
 const AVERAGE_CITY_SPEED_KMH = 30;
 const PICKUP_AND_DROPOFF_BUFFER_MINUTES = 4;
 const MINIMUM_TRIP_DURATION_MINUTES = 5;
+const KM_TO_MILES = 0.621371;
 
 function toRadians(degrees: number): number {
   return (degrees * Math.PI) / 180;
@@ -38,4 +39,17 @@ export function estimateTripDurationMinutes(
   const totalMinutes = driveMinutes + PICKUP_AND_DROPOFF_BUFFER_MINUTES;
 
   return Math.max(MINIMUM_TRIP_DURATION_MINUTES, Math.round(totalMinutes));
+}
+
+export function estimateTripDistanceMiles(
+  pickup: LocationPoint | null,
+  dropoff: LocationPoint | null,
+): number | null {
+  if (!pickup || !dropoff) return null;
+
+  const straightLineKm = greatCircleDistanceKm(pickup, dropoff);
+  if (!Number.isFinite(straightLineKm)) return null;
+
+  const routeKm = Math.max(0.2, straightLineKm * ROAD_DISTANCE_MULTIPLIER);
+  return routeKm * KM_TO_MILES;
 }

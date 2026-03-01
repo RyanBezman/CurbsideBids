@@ -15,11 +15,13 @@ import {
 import type { User } from "@supabase/supabase-js";
 import type { AppRouteName } from "../../../app/navigation";
 import { estimateTripDurationMinutes } from "../../../domain/location";
-import type { ReservationRecord } from "../../../domain/reservations";
+import type { ReservationBidRecord, ReservationRecord } from "../../../domain/reservations";
 import { getUserRole } from "../../../domain/user";
 import {
   RecentActivityList,
   ReservationDetailsModal,
+  listDriverReservationBids,
+  upsertReservationBid,
 } from "../../reservations";
 import {
   NearbyDriversCard,
@@ -56,9 +58,18 @@ export function HomeScreenLoggedIn({
   const isDriver = role === "driver";
   const [quickAction, setQuickAction] = useState<QuickAction | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
-  const [acceptingReservationId, setAcceptingReservationId] = useState<string | null>(null);
-  const [acceptedReservationIds, setAcceptedReservationIds] = useState<string[]>([]);
+  const [isLoadingDriverBids, setIsLoadingDriverBids] = useState(false);
+  const [submittingBidReservationId, setSubmittingBidReservationId] = useState<string | null>(
+    null,
+  );
+  const [driverBidsByReservationId, setDriverBidsByReservationId] = useState<
+    Record<string, ReservationBidRecord>
+  >({});
   const previousReservationIdsRef = useRef<string[]>([]);
+  const recentReservationIds = useMemo(
+    () => recentReservations.map((reservation) => reservation.id),
+    [recentReservations],
+  );
   const activeReservationForTimeline = useMemo(() => {
     if (recentReservations.length === 0) return null;
 
@@ -115,6 +126,45 @@ export function HomeScreenLoggedIn({
 
     previousReservationIdsRef.current = nextIds;
   }, [isDriver, recentReservations]);
+
+  useEffect(() => {
+    if (!isDriver) return;
+    if (recentReservationIds.length === 0) {
+      setDriverBidsByReservationId({});
+      setIsLoadingDriverBids(false);
+      return;
+    }
+
+    let isSubscribed = true;
+    setIsLoadingDriverBids(true);
+
+    void (async () => {
+      try {
+        const bids = await listDriverReservationBids(user.id, 200);
+        if (!isSubscribed) return;
+
+        const reservationIdSet = new Set(recentReservationIds);
+        const nextByReservationId: Record<string, ReservationBidRecord> = {};
+
+        for (const bid of bids) {
+          if (!reservationIdSet.has(bid.reservationId)) continue;
+          nextByReservationId[bid.reservationId] = bid;
+        }
+
+        setDriverBidsByReservationId(nextByReservationId);
+      } catch (error) {
+        console.warn("Unable to load driver reservation bids", error);
+      } finally {
+        if (isSubscribed) {
+          setIsLoadingDriverBids(false);
+        }
+      }
+    })();
+
+    return () => {
+      isSubscribed = false;
+    };
+  }, [isDriver, recentReservationIds, user.id]);
 
   return (
     <SafeAreaView className="flex-1 bg-neutral-950">
@@ -182,8 +232,8 @@ export function HomeScreenLoggedIn({
               ) : (
                 <View className="gap-3">
                   {recentReservations.map((reservation) => {
-                    const isAccepting = acceptingReservationId === reservation.id;
-                    const isAccepted = acceptedReservationIds.includes(reservation.id);
+                    const existingBid = driverBidsByReservationId[reservation.id] ?? null;
+                    const isSubmittingBid = submittingBidReservationId === reservation.id;
                     const estimatedTripMinutes = estimateTripDurationMinutes(
                       reservation.pickupLocation,
                       reservation.dropoffLocation,
@@ -194,20 +244,40 @@ export function HomeScreenLoggedIn({
                         key={reservation.id}
                         reservation={reservation}
                         estimatedTripMinutes={estimatedTripMinutes}
-                        isAccepting={isAccepting}
-                        isAccepted={isAccepted}
-                        onAccept={() => {
-                          setAcceptingReservationId(reservation.id);
-                          setTimeout(() => {
-                            setAcceptingReservationId(null);
-                            setAcceptedReservationIds((prev) =>
-                              prev.includes(reservation.id) ? prev : [...prev, reservation.id],
+                        existingBidAmountCents={existingBid?.amountCents ?? null}
+                        existingBidNote={existingBid?.note ?? null}
+                        isLoadingExistingBid={isLoadingDriverBids}
+                        isSubmittingBid={isSubmittingBid}
+                        onSubmitBid={async (input) => {
+                          const isUpdatingBid = existingBid !== null;
+                          setSubmittingBidReservationId(reservation.id);
+                          try {
+                            const bid = await upsertReservationBid(
+                              {
+                                reservationId: reservation.id,
+                                amountCents: input.amountCents,
+                                etaMinutes: estimatedTripMinutes,
+                                note: input.note,
+                              },
+                              user.id,
                             );
+
+                            setDriverBidsByReservationId((previous) => ({
+                              ...previous,
+                              [reservation.id]: bid,
+                            }));
+
                             Alert.alert(
-                              "Ride accepted",
-                              "This ride is marked accepted in the UI. Backend assignment wiring is next.",
+                              isUpdatingBid ? "Bid updated" : "Bid submitted",
+                              isUpdatingBid
+                                ? "Your latest price has been saved for this ride."
+                                : "Your bid is now visible to the rider.",
                             );
-                          }, 500);
+                          } finally {
+                            setSubmittingBidReservationId((current) =>
+                              current === reservation.id ? null : current,
+                            );
+                          }
                         }}
                       />
                     );
