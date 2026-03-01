@@ -21,6 +21,7 @@ const TIMELINE_STEPS = [
 
 function getTimelineStepIndex(status: string): number {
   if (status === "pending") return 0;
+  if (status === "bid_selected") return 1;
   if (status === "accepted") return 1;
   if (status === "driver_en_route") return 2;
   if (status === "picked_up") return 2;
@@ -72,7 +73,9 @@ export function ReservationProgressTimeline({
   const stepLabel = TIMELINE_STEPS[currentStep] ?? TIMELINE_STEPS[0];
   const rideImage = RIDE_OPTION_BY_TYPE[reservation.rideType]?.source;
   const canCancelRide =
-    reservation.status === "pending" || reservation.status === "accepted";
+    reservation.status === "pending" ||
+    reservation.status === "bid_selected" ||
+    reservation.status === "accepted";
 
   const handleOpenManageActions = () => {
     if (!canCancelRide || isCancelingReservation) return;

@@ -3,6 +3,7 @@ import { formatStatusLabel, shortId } from "./reservationPresentation";
 describe("reservation presentation", () => {
   it("formats status labels", () => {
     expect(formatStatusLabel("pending")).toBe("Pending");
+    expect(formatStatusLabel("bid_selected")).toBe("Bid Selected");
     expect(formatStatusLabel("accepted")).toBe("Accepted");
     expect(formatStatusLabel("driver_en_route")).toBe("In progress");
   });

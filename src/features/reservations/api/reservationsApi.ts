@@ -16,6 +16,9 @@ type ReservationRow = {
   id: string;
   kind: "scheduled" | "ride" | "package";
   status: ReservationStatus;
+  driver_id: string | null;
+  selected_bid_id: string | null;
+  agreed_fare_cents: number | null;
   ride_type: ReservationRecord["rideType"];
   pickup_label: string;
   pickup_lat: number | null;
@@ -52,6 +55,9 @@ function mapReservationRow(row: ReservationRow): ReservationRecord {
     id: row.id,
     kind: row.kind,
     status: row.status,
+    driverId: row.driver_id,
+    selectedBidId: row.selected_bid_id,
+    agreedFareCents: row.agreed_fare_cents,
     rideType: row.ride_type,
     pickupLabel: row.pickup_label,
     pickupLocation: mapStoredLocationPoint(row.pickup_label, row.pickup_lat, row.pickup_lng),
@@ -117,7 +123,7 @@ export async function listRecentReservations(
   const { data, error } = await supabase
     .from("reservations")
     .select(
-      "id, kind, status, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
+      "id, kind, status, driver_id, selected_bid_id, agreed_fare_cents, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -136,7 +142,7 @@ export async function listPendingRideReservations(
   const { data, error } = await supabase
     .from("reservations")
     .select(
-      "id, kind, status, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
+      "id, kind, status, driver_id, selected_bid_id, agreed_fare_cents, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
     )
     .eq("status", "pending")
     .in("kind", ["ride", "scheduled"])
@@ -162,9 +168,9 @@ export async function cancelReservation(
     })
     .eq("id", id)
     .eq("user_id", userId)
-    .in("status", ["pending", "accepted"])
+    .in("status", ["pending", "bid_selected", "accepted"])
     .select(
-      "id, kind, status, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
+      "id, kind, status, driver_id, selected_bid_id, agreed_fare_cents, ride_type, pickup_label, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at",
     )
     .single();
 

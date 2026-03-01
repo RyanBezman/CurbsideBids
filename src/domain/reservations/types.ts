@@ -5,11 +5,18 @@ export type ReservationKind = "scheduled" | "ride" | "package";
 
 export type ReservationStatus =
   | "pending"
+  | "bid_selected"
   | "accepted"
   | "driver_en_route"
   | "picked_up"
   | "completed"
   | "canceled";
+
+export type ReservationBidStatus =
+  | "active"
+  | "selected"
+  | "rejected"
+  | "withdrawn";
 
 export type SchedulePayload = {
   pickup: string;
@@ -34,6 +41,9 @@ export type ReservationRecord = {
   id: string;
   kind: ReservationKind;
   status: ReservationStatus;
+  driverId: string | null;
+  selectedBidId: string | null;
+  agreedFareCents: number | null;
   rideType: RideType;
   pickupLabel: string;
   pickupLocation: LocationPoint | null;
@@ -42,4 +52,23 @@ export type ReservationRecord = {
   scheduledAt: string;
   createdAt: string;
   canceledAt: string | null;
+};
+
+export type ReservationBidRecord = {
+  id: string;
+  reservationId: string;
+  driverId: string;
+  amountCents: number;
+  etaMinutes: number | null;
+  note: string | null;
+  status: ReservationBidStatus;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type UpsertReservationBidPayload = {
+  reservationId: string;
+  amountCents: number;
+  etaMinutes?: number | null;
+  note?: string | null;
 };

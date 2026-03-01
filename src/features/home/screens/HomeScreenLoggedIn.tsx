@@ -64,7 +64,10 @@ export function HomeScreenLoggedIn({
 
     return (
       recentReservations.find(
-        (reservation) => reservation.status === "pending" || reservation.status === "accepted",
+        (reservation) =>
+          reservation.status === "pending" ||
+          reservation.status === "bid_selected" ||
+          reservation.status === "accepted",
       ) ?? null
     );
   }, [recentReservations]);
