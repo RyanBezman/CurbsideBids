@@ -8,22 +8,24 @@ import {
   type NativeStackNavigationOptions,
 } from "@react-navigation/native-stack";
 import {
-  isRideRequestRoute,
   toAppRouteName,
   type NavigableRouteName,
   type RootStackParamList,
-} from "./navigation";
-import { useAppSession } from "./hooks";
-import { SignInScreen, SignUpScreen, useAuthFlow } from "../features/auth";
-import { HomeScreenLoggedIn, HomeScreenLoggedOut } from "../features/home";
+} from "@app/navigation";
+import {
+  useAppSession,
+  useAuthFlowBindings,
+  useHomeFlow,
+  useRideRequestFlow,
+} from "@app/hooks";
+import { SignInScreen, SignUpScreen } from "@features/auth";
+import { HomeScreenLoggedIn, HomeScreenLoggedOut } from "@features/home";
 import {
   PackageScreen,
   ScheduleScreen,
   WhereToScreen,
-  useRideRequestState,
   useScheduleSubmission,
-} from "../features/ride-request";
-import { useRecentReservations } from "../features/reservations";
+} from "@features/ride-request";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const navigationRef = createNavigationContainerRef<RootStackParamList>();
@@ -33,7 +35,6 @@ export function AppRoot() {
   const {
     dropoff,
     dropoffLocation,
-    fillPickupFromCurrentLocation,
     handleDropoffChange,
     handleDropoffSelectSuggestion,
     handlePickupChange,
@@ -47,7 +48,8 @@ export function AppRoot() {
     setDropoffLocation,
     setRideType,
     setScheduleDate,
-  } = useRideRequestState();
+    primePickupForRoute,
+  } = useRideRequestFlow();
 
   const {
     handleCancelReservation,
@@ -57,14 +59,12 @@ export function AppRoot() {
     loadRecentReservations,
     recentReservations,
     resetRecentReservations,
-  } = useRecentReservations(user);
+  } = useHomeFlow(user);
 
   const onNavigate = (nextRoute: NavigableRouteName) => {
     const next = toAppRouteName(nextRoute);
 
-    if (isRideRequestRoute(next) && pickup.trim().length === 0) {
-      void fillPickupFromCurrentLocation();
-    }
+    primePickupForRoute(next);
 
     if (!navigationRef.isReady()) return;
 
@@ -114,12 +114,10 @@ export function AppRoot() {
     setName,
     setPassword,
     setRole,
-  } = useAuthFlow({
+  } = useAuthFlowBindings({
     onNavigate,
-    onSignedOut: () => {
-      clearPendingScheduleSubmission();
-      resetRecentReservations();
-    },
+    clearPendingScheduleSubmission,
+    resetRecentReservations,
   });
 
   useEffect(() => {
@@ -136,15 +134,6 @@ export function AppRoot() {
       routes: [{ name: "home" }],
     });
   }, [user, pendingScheduleSubmissionRef]);
-
-  useEffect(() => {
-    if (!user) {
-      resetRecentReservations();
-      return;
-    }
-
-    void loadRecentReservations(user.id);
-  }, [loadRecentReservations, resetRecentReservations, user]);
 
   const sharedStackOptions: NativeStackNavigationOptions = {
     headerShown: false,

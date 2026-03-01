@@ -1,7 +1,12 @@
-import { ActivityIndicator, Image, Text, TouchableOpacity, View } from "react-native";
-import type { ReservationRecord } from "../../../domain/reservations";
-import { RIDE_OPTION_BY_TYPE } from "../../../domain/ride";
-import { formatDatetime, formatStatusLabel, getStatusClasses } from "../lib";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import type { ReservationRecord } from "@domain/reservations";
+import { RIDE_OPTION_BY_TYPE } from "@domain/ride";
+import {
+  ReservationRoutePreview,
+  ReservationStatusChip,
+  ReservationVehicleThumb,
+} from "@shared/ui";
+import { formatDatetime } from "@features/reservations/lib";
 
 type RecentActivityListProps = {
   reservations: ReservationRecord[];
@@ -15,7 +20,6 @@ type RecentActivityCardProps = {
 };
 
 function RecentActivityCard({ reservation, onSelectReservation }: RecentActivityCardProps) {
-  const statusClasses = getStatusClasses(reservation.status);
   const rideImage = RIDE_OPTION_BY_TYPE[reservation.rideType]?.source;
 
   return (
@@ -24,54 +28,26 @@ function RecentActivityCard({ reservation, onSelectReservation }: RecentActivity
       activeOpacity={0.7}
       className="rounded-2xl p-4 border bg-neutral-900 border-neutral-800"
     >
-      {/* Top row: image + info + status badge */}
       <View className="flex-row items-center">
-        {/* Vehicle thumbnail */}
-        {rideImage ? (
-          <View
-            className="mr-3 h-12 w-16 items-center justify-center rounded-xl bg-neutral-800"
-          >
-            <Image source={rideImage} className="h-8 w-14" resizeMode="contain" />
-          </View>
-        ) : null}
+        <ReservationVehicleThumb source={rideImage} containerClassName="mr-3" />
 
-        {/* Ride type + scheduled time */}
         <View className="flex-1">
-          <Text className="text-white font-semibold text-sm">
-            {reservation.rideType}
-          </Text>
+          <Text className="text-white font-semibold text-sm">{reservation.rideType}</Text>
           <Text className="text-neutral-400 text-xs mt-0.5">
             {formatDatetime(reservation.scheduledAt)}
           </Text>
         </View>
 
-        {/* Status chip */}
-        <View className={`rounded-full border px-2.5 py-1 ${statusClasses.chip}`}>
-          <Text className={`text-xs font-medium ${statusClasses.text}`}>
-            {formatStatusLabel(reservation.status)}
-          </Text>
-        </View>
+        <ReservationStatusChip status={reservation.status} />
       </View>
 
-      {/* Route: pickup → dropoff */}
-      <View className="mt-3 ml-1 flex-row items-center">
-        <View className="items-center mr-2.5">
-          <View className="h-2 w-2 rounded-full border-[1.5px] border-green-500 bg-green-500/30" />
-          <View className="w-[1.5px] h-2.5 bg-neutral-700 my-0.5" />
-          <View className="h-2 w-2 rounded-full border-[1.5px] border-violet-500 bg-violet-500/30" />
-        </View>
-        <View className="flex-1">
-          <Text className="text-neutral-300 text-xs" numberOfLines={1}>
-            {reservation.pickupLabel}
-          </Text>
-          <Text className="text-neutral-500 text-xs mt-1" numberOfLines={1}>
-            {reservation.dropoffLabel}
-          </Text>
-        </View>
-        {/* Chevron */}
-        <Text className="text-neutral-600 text-sm ml-2">›</Text>
-      </View>
+      <ReservationRoutePreview
+        pickupLabel={reservation.pickupLabel}
+        dropoffLabel={reservation.dropoffLabel}
+        containerClassName="mt-3 ml-1"
+      />
 
+      <Text className="text-neutral-600 text-sm ml-auto">›</Text>
     </TouchableOpacity>
   );
 }

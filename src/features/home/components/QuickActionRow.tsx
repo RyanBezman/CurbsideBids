@@ -1,5 +1,5 @@
 import { Text, TouchableOpacity, View } from "react-native";
-import type { AppRouteName } from "../../../app/navigation";
+import type { AppRouteName } from "@app/navigation";
 import type { QuickAction } from "../types";
 
 type QuickActionRowProps = {

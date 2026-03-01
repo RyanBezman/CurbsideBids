@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
+import type { ReservationRecord } from "@domain/reservations";
+import { getUserRole } from "@domain/user";
+import { supabase } from "@shared/api";
 import {
   cancelReservation,
   listPendingRideReservations,
   listRecentReservations,
 } from "../api";
-import type { ReservationRecord } from "../../../domain/reservations";
-import { getUserRole } from "../../../domain/user";
-import { supabase } from "../../../shared/api/supabase/client";
 
 type RealtimeReservationRow = {
   user_id?: string | null;
