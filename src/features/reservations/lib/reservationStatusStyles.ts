@@ -17,6 +17,14 @@ export function getStatusClasses(status: ReservationRecord["status"]) {
     };
   }
 
+  if (status === "bid_selected") {
+    return {
+      chip: "bg-sky-500/20 border-sky-400/40",
+      text: "text-sky-300",
+      dot: "bg-sky-400",
+    };
+  }
+
   if (status === "completed") {
     return {
       chip: "bg-violet-500/20 border-violet-400/40",

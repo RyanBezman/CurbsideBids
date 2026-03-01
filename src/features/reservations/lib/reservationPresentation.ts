@@ -11,6 +11,7 @@ export function formatDatetime(iso: string): string {
 
 export function formatStatusLabel(status: ReservationRecord["status"]): string {
   if (status === "pending") return "Pending";
+  if (status === "bid_selected") return "Bid Selected";
   if (status === "accepted") return "Accepted";
   if (status === "completed") return "Completed";
   if (status === "canceled") return "Canceled";
