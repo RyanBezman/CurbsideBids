@@ -95,32 +95,6 @@ const seedUsers = [
   },
 ];
 
-const rideTypes = ["Economy", "XL", "Luxury", "Luxury SUV"];
-const rideKinds = ["ride", "scheduled", "package"];
-
-const locationPairs = [
-  ["JFK Airport Terminal 4", "Times Square, Manhattan"],
-  ["Penn Station, Manhattan", "LaGuardia Airport Terminal B"],
-  ["Grand Central Terminal", "Brooklyn Bridge Park"],
-  ["Prospect Park, Brooklyn", "Yankee Stadium, Bronx"],
-  ["Barclays Center, Brooklyn", "Columbia University, Manhattan"],
-  ["Roosevelt Field Mall, Garden City", "Long Beach Boardwalk"],
-  ["Northwell Health, Manhasset", "UBS Arena, Elmont"],
-  ["Nassau Coliseum, Uniondale", "Jones Beach State Park"],
-  ["Atlantic Terminal, Brooklyn", "Citi Field, Queens"],
-  ["Flushing Main St, Queens", "Wall Street, Manhattan"],
-  ["Astoria Park, Queens", "Chelsea Market, Manhattan"],
-  ["Forest Hills, Queens", "Bryant Park, Manhattan"],
-];
-
-function pickFrom(list, seed) {
-  return list[seed % list.length];
-}
-
-function isoAtHoursFromNow(hoursFromNow) {
-  return new Date(Date.now() + hoursFromNow * 60 * 60 * 1000).toISOString();
-}
-
 async function deleteAllUsers() {
   let page = 1;
   const perPage = 200;
@@ -181,98 +155,11 @@ async function createSeedUsers() {
   return createdUsers;
 }
 
-function buildSeedReservationsForUser(userId, userSeed) {
-  const rows = [];
-  const statusTimeline = [
-    "completed",
-    "completed",
-    "canceled",
-    "completed",
-    "completed",
-    "completed",
-    "canceled",
-    "completed",
-    "completed",
-    "completed",
-    "completed",
-    "canceled",
-    "completed",
-    "completed",
-    "completed",
-    "completed",
-  ];
-
-  for (let i = 0; i < 16; i += 1) {
-    const pairSeed = userSeed * 31 + i;
-    const [pickup, dropoff] = pickFrom(locationPairs, pairSeed);
-    const rideType = pickFrom(rideTypes, pairSeed);
-    const kind = pickFrom(rideKinds, pairSeed + 7);
-
-    const status = statusTimeline[i];
-    const createdAtHours = -(240 - i * 12);
-    const scheduledAtHours = createdAtHours + 4;
-    let canceledAt = null;
-    if (status === "canceled") canceledAt = isoAtHoursFromNow(scheduledAtHours + 2);
-
-    rows.push({
-      user_id: userId,
-      kind,
-      status,
-      pickup_label: pickup,
-      pickup_lat: null,
-      pickup_lng: null,
-      dropoff_label: dropoff,
-      dropoff_lat: null,
-      dropoff_lng: null,
-      ride_type: rideType,
-      scheduled_at: isoAtHoursFromNow(scheduledAtHours),
-      created_at: isoAtHoursFromNow(createdAtHours),
-      canceled_at: canceledAt,
-    });
-  }
-
-  return rows;
-}
-
-async function createSeedReservations(createdUsers) {
-  const riderUsers = createdUsers.filter((user) => user.role === "rider");
-  if (!riderUsers.length) return 0;
-
-  const reservationRows = riderUsers.flatMap((user, index) =>
-    buildSeedReservationsForUser(user.id, index + 1)
-  );
-  const userA = riderUsers.find((user) => user.email === "a@aol.com");
-
-  if (userA) {
-    reservationRows.push({
-      user_id: userA.id,
-      kind: "ride",
-      status: "pending",
-      pickup_label: "Penn Station, Manhattan",
-      pickup_lat: null,
-      pickup_lng: null,
-      dropoff_label: "JFK Airport Terminal 4",
-      dropoff_lat: null,
-      dropoff_lng: null,
-      ride_type: "Economy",
-      scheduled_at: isoAtHoursFromNow(2),
-      created_at: isoAtHoursFromNow(0),
-      canceled_at: null,
-    });
-  }
-
-  const { error } = await supabase.from("reservations").insert(reservationRows);
-  if (error) throw error;
-
-  return reservationRows.length;
-}
-
 async function main() {
   const deletedCount = await deleteAllUsers();
-  const createdUsers = await createSeedUsers();
-  const createdReservationsCount = await createSeedReservations(createdUsers);
+  await createSeedUsers();
   console.log(
-    `Seed complete: deleted ${deletedCount} existing user(s), created ${seedUsers.length} user(s), created ${createdReservationsCount} reservation(s).`
+    `Seed complete: deleted ${deletedCount} existing user(s), created ${seedUsers.length} user(s).`
   );
 }
 
