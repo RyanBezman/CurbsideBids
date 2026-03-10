@@ -87,4 +87,26 @@ describe("HomeScreenLoggedIn", () => {
     expect(hasText(tree!, "Ride Status")).toBe(true);
     expect(hasText(tree!, "Recent Trips")).toBe(true);
   });
+
+  it("keeps the rider timeline visible for in-progress trips", () => {
+    const reservations = [buildReservation({ status: "driver_en_route" })];
+
+    let tree: ReturnType<typeof create>;
+    act(() => {
+      tree = create(
+        <HomeScreenLoggedIn
+          user={buildUser("rider-1", "rider")}
+          onSignOut={jest.fn()}
+          onNavigate={jest.fn()}
+          recentReservations={reservations}
+          isLoadingRecentReservations={false}
+          isSyncingNewPendingReservation={false}
+          isCancelingReservation={false}
+          onCancelReservation={jest.fn().mockResolvedValue(undefined)}
+        />,
+      );
+    });
+
+    expect(hasText(tree!, "Ride Status")).toBe(true);
+  });
 });
