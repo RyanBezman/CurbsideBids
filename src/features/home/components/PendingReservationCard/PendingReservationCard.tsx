@@ -1,4 +1,11 @@
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { estimateTripDistanceMiles } from "@domain/location";
 import { RIDE_OPTION_BY_TYPE } from "@domain/ride";
 import { PendingReservationCardHeader } from "./PendingReservationCardHeader";
@@ -7,81 +14,6 @@ import { BidComposerPanel } from "./BidComposerPanel";
 import { formatBidAmount } from "./bidPricing";
 import { useBidComposerState } from "./useBidComposerState";
 import type { PendingReservationCardProps } from "./types";
-
-type ExistingBidBannerProps = {
-  existingBidAmountCents: number;
-  existingBidNote: string | null;
-};
-
-function ExistingBidBanner({ existingBidAmountCents, existingBidNote }: ExistingBidBannerProps) {
-  return (
-    <View className="mt-3 rounded-xl border border-emerald-500/35 bg-emerald-500/10 px-3 py-2.5">
-      <View className="flex-row items-center justify-between">
-        <Text className="text-emerald-200 text-xs font-medium">
-          Your bid: {formatBidAmount(existingBidAmountCents)}
-        </Text>
-        <Text className="text-emerald-300/80 text-[11px]">
-          {existingBidNote?.trim() ? "Note included" : "No note"}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-type RiderMaxFareBannerProps = {
-  maxFareCents: number;
-};
-
-function RiderMaxFareBanner({ maxFareCents }: RiderMaxFareBannerProps) {
-  return (
-    <View className="mt-3 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5">
-      <Text className="text-amber-200 text-xs font-medium">
-        Rider max budget: {formatBidAmount(maxFareCents)}
-      </Text>
-      <Text className="text-amber-100/75 text-[11px] mt-1">
-        Stay at or below this amount to keep the bid valid.
-      </Text>
-    </View>
-  );
-}
-
-type BidComposerToggleButtonProps = {
-  hasExistingBid: boolean;
-  isBidComposerOpen: boolean;
-  isLoadingExistingBid: boolean;
-  isSubmittingBid: boolean;
-  onPress: () => void;
-};
-
-function BidComposerToggleButton({
-  hasExistingBid,
-  isBidComposerOpen,
-  isLoadingExistingBid,
-  isSubmittingBid,
-  onPress,
-}: BidComposerToggleButtonProps) {
-  return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      disabled={isLoadingExistingBid || isSubmittingBid}
-      onPress={onPress}
-      className={`mt-3 rounded-xl py-2.5 items-center ${
-        isBidComposerOpen
-          ? "bg-neutral-800 border border-neutral-700"
-          : "bg-emerald-600 border border-emerald-500/80"
-      }`}
-      testID="toggle-bid-composer"
-    >
-      {isLoadingExistingBid ? (
-        <ActivityIndicator color="#f8fafc" size="small" />
-      ) : (
-        <Text className="text-white text-sm font-semibold">
-          {isBidComposerOpen ? "Close Bid Form" : hasExistingBid ? "Update Bid" : "Place Bid"}
-        </Text>
-      )}
-    </TouchableOpacity>
-  );
-}
 
 export function PendingReservationCard({
   reservation,
@@ -104,12 +36,11 @@ export function PendingReservationCard({
     activeBidIndex,
     handleSelectAmount,
     handleSubmitBid,
+    handleWheelScroll,
     handleWheelEnd,
     isBidComposerOpen,
     isNoteOpen,
     noteText,
-    nudgeBidAmount,
-    pricingBreakdown,
     setIsBidComposerOpen,
     setIsNoteOpen,
     setNoteText,
@@ -118,7 +49,6 @@ export function PendingReservationCard({
     submissionError,
     wheelOptions,
     wheelRef,
-    wheelStepCents,
   } = useBidComposerState({
     estimatedTripMiles,
     estimatedTripMinutes,
@@ -128,74 +58,112 @@ export function PendingReservationCard({
     maxFareCents: reservation.maxFareCents,
   });
 
+  const summaryAmountCents = hasExistingBid
+    ? existingBidAmountCents
+    : suggestedBidAmountCents;
+  const closeBidComposer = () => {
+    setSubmissionError(null);
+    setIsBidComposerOpen(false);
+  };
+
   return (
-    <View className="bg-neutral-900 rounded-2xl p-4 border border-neutral-800">
-      <PendingReservationCardHeader
-        rideType={reservation.rideType}
-        scheduledAt={reservation.scheduledAt}
-        scheduledTimeZone={reservation.pickupLocation?.timeZone}
-        estimatedTripMinutes={estimatedTripMinutes}
-        rideImage={rideImage ?? null}
-      />
-
-      <PendingReservationRoute
-        pickupLabel={reservation.pickupLabel}
-        dropoffLabel={reservation.dropoffLabel}
-      />
-
-      {hasExistingBid ? (
-        <ExistingBidBanner
-          existingBidAmountCents={existingBidAmountCents}
-          existingBidNote={existingBidNote}
+    <>
+      <View className="rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+        <PendingReservationCardHeader
+          rideType={reservation.rideType}
+          scheduledAt={reservation.scheduledAt}
+          scheduledTimeZone={reservation.pickupLocation?.timeZone}
+          estimatedTripMinutes={estimatedTripMinutes}
+          rideImage={rideImage ?? null}
         />
-      ) : null}
 
-      {reservation.maxFareCents !== null ? (
-        <RiderMaxFareBanner maxFareCents={reservation.maxFareCents} />
-      ) : null}
-
-      <BidComposerToggleButton
-        hasExistingBid={hasExistingBid}
-        isBidComposerOpen={isBidComposerOpen}
-        isLoadingExistingBid={isLoadingExistingBid}
-        isSubmittingBid={isSubmittingBid}
-        onPress={() => {
-          setSubmissionError(null);
-          setIsBidComposerOpen((prev) => !prev);
-        }}
-      />
-
-      {isBidComposerOpen ? (
-        <BidComposerPanel
-          activeBidAmountCents={activeBidAmountCents}
-          activeBidIndex={activeBidIndex}
-          hasExistingBid={hasExistingBid}
-          isNoteOpen={isNoteOpen}
-          isSubmittingBid={isSubmittingBid}
-          maxFareCents={reservation.maxFareCents}
-          noteText={noteText}
-          submissionError={submissionError}
-          suggestedBidAmountCents={suggestedBidAmountCents}
-          tripBreakdownLabel={pricingBreakdown.tripBreakdownLabel}
-          mileageComponentCents={pricingBreakdown.mileageComponentCents}
-          timeComponentCents={pricingBreakdown.timeComponentCents}
-          wheelOptions={wheelOptions}
-          onSetWheelRef={(instance) => {
-            wheelRef.current = instance;
-          }}
-          onWheelEnd={handleWheelEnd}
-          onSelectWheelAmount={(amountCents) => {
-            handleSelectAmount(amountCents);
-          }}
-          onDecreaseBid={() => nudgeBidAmount(-wheelStepCents)}
-          onIncreaseBid={() => nudgeBidAmount(wheelStepCents)}
-          onToggleNote={() => setIsNoteOpen((prev) => !prev)}
-          onNoteChange={setNoteText}
-          onSubmitBid={() => {
-            void handleSubmitBid();
-          }}
+        <PendingReservationRoute
+          pickupLabel={reservation.pickupLabel}
+          dropoffLabel={reservation.dropoffLabel}
         />
-      ) : null}
-    </View>
+
+        <View className="mt-4 flex-row items-start justify-between gap-3">
+          <View className="flex-1">
+            <Text className="text-[11px] font-medium uppercase tracking-wide text-neutral-500">
+              {hasExistingBid ? "Your bid" : "Bid"}
+            </Text>
+            <Text className="mt-1 text-2xl font-semibold text-white">
+              {formatBidAmount(summaryAmountCents)}
+            </Text>
+            {existingBidNote?.trim() ? (
+              <Text className="mt-1 text-xs text-neutral-500">Note included</Text>
+            ) : null}
+          </View>
+          {reservation.maxFareCents !== null ? (
+            <Text className="rounded-full border border-neutral-700 px-2.5 py-1 text-[11px] font-medium text-neutral-300">
+              Max {formatBidAmount(reservation.maxFareCents)}
+            </Text>
+          ) : null}
+        </View>
+
+        <TouchableOpacity
+          activeOpacity={0.85}
+          disabled={isLoadingExistingBid || isSubmittingBid}
+          onPress={() => {
+            setSubmissionError(null);
+            setIsBidComposerOpen(true);
+          }}
+          className="mt-4 rounded-2xl bg-white py-3 items-center"
+          testID="toggle-bid-composer"
+        >
+          {isLoadingExistingBid ? (
+            <ActivityIndicator color="#f8fafc" size="small" />
+          ) : (
+            <Text className="text-sm font-semibold text-neutral-950">
+              {hasExistingBid ? "Edit bid" : "Place bid"}
+            </Text>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <Modal
+        transparent
+        animationType="slide"
+        visible={isBidComposerOpen}
+        onRequestClose={closeBidComposer}
+      >
+        <Pressable
+          className="flex-1 justify-end bg-black/65"
+          onPress={closeBidComposer}
+          testID="bid-composer-backdrop"
+        >
+          <Pressable
+            onPress={() => {}}
+          >
+            <BidComposerPanel
+              activeBidAmountCents={activeBidAmountCents}
+              activeBidIndex={activeBidIndex}
+              hasExistingBid={hasExistingBid}
+              isNoteOpen={isNoteOpen}
+              isSubmittingBid={isSubmittingBid}
+              maxFareCents={reservation.maxFareCents}
+              noteText={noteText}
+              onRequestClose={closeBidComposer}
+              submissionError={submissionError}
+              suggestedBidAmountCents={suggestedBidAmountCents}
+              wheelOptions={wheelOptions}
+              onSetWheelRef={(instance) => {
+                wheelRef.current = instance;
+              }}
+              onWheelScroll={handleWheelScroll}
+              onWheelEnd={handleWheelEnd}
+              onSelectWheelAmount={(amountCents) => {
+                handleSelectAmount(amountCents);
+              }}
+              onToggleNote={() => setIsNoteOpen((prev) => !prev)}
+              onNoteChange={setNoteText}
+              onSubmitBid={() => {
+                void handleSubmitBid();
+              }}
+            />
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
   );
 }

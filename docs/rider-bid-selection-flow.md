@@ -140,9 +140,14 @@ The database must arbitrate the winner in one transaction.
 - Rider selection UI must call the selection RPC, not write multiple tables directly.
 - After selection, the rider UI should switch from bid comparison to reservation progress.
 - The current rider entrypoint is the reservation details modal opened from the active reservation timeline.
+- While a reservation is still `pending`, the rider home screen should surface live bidding state:
+  - `Waiting for bids` when no active driver offers exist yet
+  - `Offers Ready` once one or more active bids exist
+- The rider home screen should expose a clear review action when active bids exist so the rider can open the reservation details modal and compare offers.
 
 ### Realtime Expectations
 - New incoming bids should appear without requiring a manual refresh.
+- The rider home screen should refresh when visible `reservation_bids` rows change so pending rides update their live status and offer count without reopening the app.
 - Once a bid is selected:
   - the rider should immediately see the reservation leave the bid-comparison state
   - losing drivers should see the reservation leave their pending queue
@@ -176,6 +181,7 @@ If product behavior changes for when `bid_selected` transitions to `accepted`, u
   - losing bids are `rejected`
   - reservation fields are updated consistently
 - Realtime-driven UI reflects both new bids and closed bidding.
+- Rider home UI reflects pending bid activity, including the live status state and review-offers entrypoint.
 
 ## Documentation Maintenance Rule
 - Any change to bidding, bid selection, assignment, related statuses, SQL policies, or reservation assignment fields must update this document in the same change.

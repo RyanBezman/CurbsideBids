@@ -31,6 +31,10 @@ type ReservationRow = {
   canceled_at: string | null;
 };
 
+type ReservationBidCountRow = {
+  reservation_id: string;
+};
+
 const RESERVATION_SELECT_COLUMNS =
   "id, kind, status, driver_id, selected_bid_id, agreed_fare_cents, max_fare_cents, ride_type, pickup_label, pickup_time_zone, pickup_lat, pickup_lng, dropoff_label, dropoff_lat, dropoff_lng, scheduled_at, created_at, canceled_at";
 
@@ -62,6 +66,7 @@ function mapReservationRow(row: ReservationRow): ReservationRecord {
     status: row.status,
     driverId: row.driver_id,
     selectedBidId: row.selected_bid_id,
+    activeBidCount: 0,
     agreedFareCents: row.agreed_fare_cents,
     maxFareCents: row.max_fare_cents,
     rideType: row.ride_type,
@@ -83,6 +88,50 @@ function mapReservationRow(row: ReservationRow): ReservationRecord {
     createdAt: row.created_at,
     canceledAt: row.canceled_at,
   };
+}
+
+async function loadActiveBidCounts(
+  reservationIds: string[],
+): Promise<Record<string, number>> {
+  if (reservationIds.length === 0) {
+    return {};
+  }
+
+  const { data, error } = await supabase
+    .from("reservation_bids")
+    .select("reservation_id")
+    .in("reservation_id", reservationIds)
+    .eq("status", "active");
+
+  if (error) {
+    throw new Error(error.message || "Failed to load active reservation bid counts.");
+  }
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    const reservationId = (row as ReservationBidCountRow).reservation_id;
+    counts[reservationId] = (counts[reservationId] ?? 0) + 1;
+  }
+
+  return counts;
+}
+
+async function attachActiveBidCounts(
+  reservations: ReservationRecord[],
+): Promise<ReservationRecord[]> {
+  try {
+    const countsByReservationId = await loadActiveBidCounts(
+      reservations.map((reservation) => reservation.id),
+    );
+
+    return reservations.map((reservation) => ({
+      ...reservation,
+      activeBidCount: countsByReservationId[reservation.id] ?? 0,
+    }));
+  } catch (error) {
+    console.warn("Unable to load active reservation bid counts", error);
+    return reservations;
+  }
 }
 
 export const supabaseReservationsDataSource: ReservationsDataSource = {
@@ -150,7 +199,9 @@ export const supabaseReservationsDataSource: ReservationsDataSource = {
       throw new Error(error.message || "Failed to load recent reservations.");
     }
 
-    return (data ?? []).map((row) => mapReservationRow(row as ReservationRow));
+    return attachActiveBidCounts(
+      (data ?? []).map((row) => mapReservationRow(row as ReservationRow)),
+    );
   },
 
   async listPendingRideReservations(limit = 50): Promise<ReservationRecord[]> {

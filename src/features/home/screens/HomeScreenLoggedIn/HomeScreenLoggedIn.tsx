@@ -15,7 +15,6 @@ import {
 } from "@domain/reservations";
 import { getUserRole } from "@domain/user";
 import { ProfileCard } from "@features/home/components";
-import type { QuickAction } from "@features/home/types";
 import { ReservationDetailsModal } from "@features/reservations";
 import { DriverHomeSection } from "./DriverHomeSection";
 import { HomeTopBar } from "./HomeTopBar";
@@ -46,7 +45,6 @@ export function HomeScreenLoggedIn({
 }: HomeScreenLoggedInProps) {
   const role = getUserRole(user);
   const isDriver = role === "driver";
-  const [quickAction, setQuickAction] = useState<QuickAction | null>(null);
   const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const previousReservationIdsRef = useRef<string[]>([]);
 
@@ -127,10 +125,8 @@ export function HomeScreenLoggedIn({
             isLoadingRecentReservations={isLoadingRecentReservations}
             onCancelReservation={onCancelReservation}
             onNavigate={onNavigate}
-            onQuickActionChange={setQuickAction}
             onSelectActiveReservation={setSelectedReservationId}
             onSelectReservation={setSelectedReservationId}
-            quickAction={quickAction}
             recentActivityReservations={recentActivityReservations}
           />
         )}

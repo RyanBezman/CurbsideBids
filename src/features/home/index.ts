@@ -8,4 +8,3 @@ export {
   ReservationProgressTimeline,
   TripSearchCard,
 } from "./components";
-export type { QuickAction } from "./types";

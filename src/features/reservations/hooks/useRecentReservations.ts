@@ -25,6 +25,103 @@ function getReservationRow(value: unknown): RealtimeReservationRow {
   return value as RealtimeReservationRow;
 }
 
+type LoadRecentReservationsFn = (
+  targetUserId?: string,
+  options?: LoadRecentReservationsOptions,
+) => Promise<void>;
+
+type ReservationFeedSubscriptionOptions = {
+  loadRecentReservations: LoadRecentReservationsFn;
+  setIsSyncingNewPendingReservation: (value: boolean) => void;
+  user: User | null;
+};
+
+function useReservationFeedSubscription({
+  loadRecentReservations,
+  setIsSyncingNewPendingReservation,
+  user,
+}: ReservationFeedSubscriptionOptions) {
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const isDriver = getUserRole(user) === "driver";
+    const reservationChannel = supabase
+      .channel(`reservations-feed-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "reservations" },
+        (payload) => {
+          const previous = getReservationRow(payload.old);
+          const next = getReservationRow(payload.new);
+          const isPendingRideInsert =
+            payload.eventType === "INSERT" &&
+            next.status === "pending" &&
+            (next.kind === "ride" || next.kind === "scheduled");
+
+          const touchesUserReservation =
+            previous.user_id === user.id || next.user_id === user.id;
+          const touchesDriverPendingReservation =
+            (previous.status === "pending" &&
+              (previous.kind === "ride" || previous.kind === "scheduled")) ||
+            (next.status === "pending" && (next.kind === "ride" || next.kind === "scheduled"));
+
+          if ((isDriver && touchesDriverPendingReservation) || touchesUserReservation) {
+            if (isDriver && isPendingRideInsert) {
+              setIsSyncingNewPendingReservation(true);
+            }
+
+            void loadRecentReservations(user.id, { showLoading: false }).finally(() => {
+              if (isDriver && isPendingRideInsert) {
+                setIsSyncingNewPendingReservation(false);
+              }
+            });
+          }
+        },
+      )
+      .subscribe();
+
+    const channels = [reservationChannel];
+
+    if (!isDriver) {
+      const reservationBidsChannel = supabase
+        .channel(`reservation-bids-feed-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "reservation_bids" },
+          () => {
+            void loadRecentReservations(user.id, { showLoading: false });
+          },
+        )
+        .subscribe();
+
+      channels.push(reservationBidsChannel);
+    }
+
+    return () => {
+      for (const channel of channels) {
+        void supabase.removeChannel(channel);
+      }
+    };
+  }, [loadRecentReservations, setIsSyncingNewPendingReservation, user]);
+}
+
+function useDriverReservationPolling({
+  loadRecentReservations,
+  user,
+}: Pick<ReservationFeedSubscriptionOptions, "loadRecentReservations" | "user">) {
+  useEffect(() => {
+    if (!user?.id || getUserRole(user) !== "driver") return;
+
+    const intervalId = setInterval(() => {
+      void loadRecentReservations(user.id, { showLoading: false });
+    }, 15000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [loadRecentReservations, user]);
+}
+
 export function useRecentReservations(user: User | null) {
   const [recentReservations, setRecentReservations] = useState<ReservationRecord[]>([]);
   const [isLoadingRecentReservations, setIsLoadingRecentReservations] = useState(false);
@@ -68,63 +165,12 @@ export function useRecentReservations(user: User | null) {
     [user],
   );
 
-  useEffect(() => {
-    if (!user?.id) return;
-
-    const isDriver = getUserRole(user) === "driver";
-
-    const channel = supabase
-      .channel(`reservations-feed-${user.id}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "reservations" },
-        (payload) => {
-          const previous = getReservationRow(payload.old);
-          const next = getReservationRow(payload.new);
-          const isPendingRideInsert =
-            payload.eventType === "INSERT" &&
-            next.status === "pending" &&
-            (next.kind === "ride" || next.kind === "scheduled");
-
-          const touchesUserReservation =
-            previous.user_id === user.id || next.user_id === user.id;
-          const touchesDriverPendingReservation =
-            (previous.status === "pending" &&
-              (previous.kind === "ride" || previous.kind === "scheduled")) ||
-            (next.status === "pending" && (next.kind === "ride" || next.kind === "scheduled"));
-
-          if ((isDriver && touchesDriverPendingReservation) || touchesUserReservation) {
-            if (isDriver && isPendingRideInsert) {
-              setIsSyncingNewPendingReservation(true);
-            }
-
-            void loadRecentReservations(user.id, { showLoading: false }).finally(() => {
-              if (isDriver && isPendingRideInsert) {
-                setIsSyncingNewPendingReservation(false);
-              }
-            });
-          }
-        },
-      )
-      .subscribe();
-
-    return () => {
-      void supabase.removeChannel(channel);
-    };
-  }, [loadRecentReservations, user]);
-
-  useEffect(() => {
-    if (!user?.id) return;
-    if (getUserRole(user) !== "driver") return;
-
-    const intervalId = setInterval(() => {
-      void loadRecentReservations(user.id, { showLoading: false });
-    }, 15000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [loadRecentReservations, user]);
+  useReservationFeedSubscription({
+    loadRecentReservations,
+    setIsSyncingNewPendingReservation,
+    user,
+  });
+  useDriverReservationPolling({ loadRecentReservations, user });
 
   const handleCancelReservation = useCallback(
     async (reservationId: string) => {

@@ -45,6 +45,7 @@ export type ReservationRecord = {
   status: ReservationStatus;
   driverId: string | null;
   selectedBidId: string | null;
+  activeBidCount: number;
   agreedFareCents: number | null;
   maxFareCents: number | null;
   rideType: RideType;

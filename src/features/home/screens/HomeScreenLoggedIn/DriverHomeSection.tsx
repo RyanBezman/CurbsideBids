@@ -117,13 +117,6 @@ export function DriverHomeSection({
           </View>
         )}
       </View>
-
-      <View className="bg-neutral-900 rounded-2xl p-5 border border-neutral-800">
-        <Text className="text-white text-base font-semibold mb-2">Coming Next</Text>
-        <Text className="text-neutral-400 text-sm">
-          Request queue, accept/decline actions, and earnings history.
-        </Text>
-      </View>
     </>
   );
 }

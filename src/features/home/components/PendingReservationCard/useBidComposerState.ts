@@ -7,7 +7,6 @@ import {
 import {
   buildBidWheelOptions,
   clampBidAmount,
-  getBidPricingBreakdown,
   getClosestWheelIndex,
   getSuggestedBidAmountCents,
   WHEEL_STEP_CENTS,
@@ -57,10 +56,6 @@ export function useBidComposerState({
     () => getClosestWheelIndex(wheelOptions, activeBidAmountCents),
     [activeBidAmountCents, wheelOptions],
   );
-  const pricingBreakdown = useMemo(
-    () => getBidPricingBreakdown(estimatedTripMiles, estimatedTripMinutes),
-    [estimatedTripMiles, estimatedTripMinutes],
-  );
 
   useEffect(() => {
     if (existingBidAmountCents === null) return;
@@ -104,6 +99,13 @@ export function useBidComposerState({
     setSubmissionError(null);
   };
 
+  const handleWheelScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const rawIndex = Math.round(event.nativeEvent.contentOffset.y / WHEEL_ITEM_HEIGHT);
+    const nextIndex = Math.min(wheelOptions.length - 1, Math.max(0, rawIndex));
+    const nextAmount = wheelOptions[nextIndex];
+    setSelectedBidAmountCents((previous) => (previous === nextAmount ? previous : nextAmount));
+  };
+
   const handleSelectAmount = (amountCents: number) => {
     setSelectedBidAmountCents(clampBidAmount(amountCents, maxFareCents ?? undefined));
     setSubmissionError(null);
@@ -136,12 +138,12 @@ export function useBidComposerState({
     activeBidIndex,
     handleSelectAmount,
     handleSubmitBid,
+    handleWheelScroll,
     handleWheelEnd,
     isBidComposerOpen,
     isNoteOpen,
     noteText,
     nudgeBidAmount,
-    pricingBreakdown,
     selectedBidAmountCents,
     setIsBidComposerOpen,
     setIsNoteOpen,

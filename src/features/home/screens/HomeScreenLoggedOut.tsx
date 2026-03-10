@@ -1,5 +1,4 @@
 import { StatusBar } from "expo-status-bar";
-import { useState } from "react";
 import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
 import type { AppRouteName } from "@app/navigation";
 import {
@@ -7,7 +6,6 @@ import {
   NearbyDriversCard,
   QuickActionRow,
   TripSearchCard,
-  type QuickAction,
 } from "../index";
 
 type HomeScreenLoggedOutProps = {
@@ -15,8 +13,6 @@ type HomeScreenLoggedOutProps = {
 };
 
 export function HomeScreenLoggedOut({ onNavigate }: HomeScreenLoggedOutProps) {
-  const [quickAction, setQuickAction] = useState<QuickAction | null>(null);
-
   return (
     <SafeAreaView className="flex-1 bg-neutral-950">
       <StatusBar style="light" />
@@ -35,12 +31,8 @@ export function HomeScreenLoggedOut({ onNavigate }: HomeScreenLoggedOutProps) {
           </TouchableOpacity>
         </View>
 
-        <TripSearchCard quickAction={quickAction} onNavigate={onNavigate} />
-        <QuickActionRow
-          quickAction={quickAction}
-          onQuickActionChange={setQuickAction}
-          onNavigate={onNavigate}
-        />
+        <TripSearchCard onNavigate={onNavigate} />
+        <QuickActionRow onNavigate={onNavigate} />
         <NearbyDriversCard />
         <HowItWorksSection />
 

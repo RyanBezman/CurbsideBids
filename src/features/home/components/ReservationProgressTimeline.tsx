@@ -3,8 +3,8 @@ import {
   ActivityIndicator,
   Alert,
   Animated,
-  Text,
   TouchableOpacity,
+  Text,
   View,
 } from "react-native";
 import {
@@ -13,85 +13,13 @@ import {
 } from "@domain/reservations";
 import { RIDE_OPTION_BY_TYPE } from "@domain/ride";
 import { ReservationRoutePreview, ReservationVehicleThumb } from "@shared/ui";
-import { formatDatetime } from "@features/reservations/lib";
-
-const TIMELINE_STEPS = ["Requested", "Accepted", "Active", "Completed"] as const;
-
-function getTimelineStepIndex(status: string): number {
-  if (status === "pending") return 0;
-  if (status === "bid_selected" || status === "accepted") return 1;
-  if (status === "driver_en_route" || status === "picked_up") return 2;
-  if (status === "completed") return 3;
-  return 0;
-}
-
-function LiveBadge({ pulse }: { pulse: Animated.Value }) {
-  return (
-    <View className="rounded-full border border-emerald-400/35 bg-emerald-500/15 px-2 py-0.5">
-      <View className="flex-row items-center gap-1.5">
-        <Animated.View
-          style={{
-            opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.45, 1] }),
-            transform: [
-              { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.9, 1.25] }) },
-            ],
-          }}
-          className="h-1.5 w-1.5 rounded-full bg-emerald-300"
-        />
-        <Text className="text-[10px] font-semibold tracking-wide text-emerald-200">LIVE</Text>
-      </View>
-    </View>
-  );
-}
-
-type TimelineProgressProps = {
-  currentStep: number;
-};
-
-function TimelineProgress({ currentStep }: TimelineProgressProps) {
-  const progressPercent = ((currentStep + 1) / TIMELINE_STEPS.length) * 100;
-  const stepLabel = TIMELINE_STEPS[currentStep] ?? TIMELINE_STEPS[0];
-
-  return (
-    <>
-      <View className="mt-3 w-full self-center">
-        <View className="mb-1 flex-row items-center justify-between">
-          <Text className="text-sm font-medium text-neutral-200">{stepLabel}</Text>
-          <Text className="text-xs text-neutral-500">{`Step ${currentStep + 1} of ${TIMELINE_STEPS.length}`}</Text>
-        </View>
-      </View>
-
-      <View className="mt-4 w-full self-center">
-        <View className="relative h-3.5 w-full justify-center">
-          <View className="absolute left-0 right-0 h-[2px] rounded-full bg-neutral-700" />
-          <View
-            className="absolute left-0 h-[2px] rounded-full bg-violet-500"
-            style={{ width: `${progressPercent}%` }}
-          />
-          <View className="flex-row items-center justify-between">
-            {TIMELINE_STEPS.map((step, index) => {
-              const isCompleted = index <= currentStep;
-              const isCurrent = index === currentStep;
-
-              return (
-                <View
-                  key={step}
-                  className={`h-3.5 w-3.5 rounded-full border ${
-                    isCompleted
-                      ? isCurrent
-                        ? "border-violet-300 bg-violet-400"
-                        : "border-violet-500 bg-violet-500"
-                      : "border-neutral-700 bg-neutral-900"
-                  }`}
-                />
-              );
-            })}
-          </View>
-        </View>
-      </View>
-    </>
-  );
-}
+import { formatActiveBidSummary, formatDatetime } from "@features/reservations/lib";
+import {
+  getLiveStatusLabel,
+  getTimelineStepIndex,
+  LiveBadge,
+  TimelineProgress,
+} from "./ReservationProgressTimelineParts";
 
 type TripSummaryCardProps = {
   reservation: ReservationRecord;
@@ -158,6 +86,9 @@ export function ReservationProgressTimeline({
 
   const currentStep = getTimelineStepIndex(reservation.status);
   const canCancelRide = canCancelReservationStatus(reservation.status);
+  const hasIncomingBids =
+    reservation.status === "pending" && reservation.activeBidCount > 0;
+  const liveStatusLabel = getLiveStatusLabel(reservation);
 
   const handleOpenManageActions = () => {
     if (!canCancelRide || isCancelingReservation) return;
@@ -190,16 +121,40 @@ export function ReservationProgressTimeline({
         <LiveBadge pulse={pulse} />
       </View>
 
-      <TimelineProgress currentStep={currentStep} />
+      <TimelineProgress currentStep={currentStep} stepLabel={liveStatusLabel} />
+
+      {hasIncomingBids ? (
+        <View className="mt-4 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 py-3">
+          <Text className="text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
+            Offers Ready
+          </Text>
+          <Text className="mt-1 text-sm text-emerald-50">
+            {formatActiveBidSummary(reservation.activeBidCount)}. Open the ride to compare bids.
+          </Text>
+        </View>
+      ) : null}
+
       <TripSummaryCard reservation={reservation} />
 
       <View className="mt-2 flex-row items-center justify-between px-1">
         <TouchableOpacity
           onPress={() => onOpenDetails(reservation.id)}
           activeOpacity={0.7}
-          className="px-1 py-0.5"
+          className={
+            hasIncomingBids
+              ? "rounded-full border border-emerald-400/35 bg-emerald-500/15 px-3 py-1.5"
+              : "px-1 py-0.5"
+          }
         >
-          <Text className="text-xs font-medium text-neutral-300">View details</Text>
+          <Text
+            className={
+              hasIncomingBids
+                ? "text-xs font-semibold text-emerald-200"
+                : "text-xs font-medium text-neutral-300"
+            }
+          >
+            {hasIncomingBids ? "Review offers" : "View details"}
+          </Text>
         </TouchableOpacity>
 
         {canCancelRide ? (

@@ -6,7 +6,7 @@ import {
   ReservationStatusChip,
   ReservationVehicleThumb,
 } from "@shared/ui";
-import { formatDatetime } from "@features/reservations/lib";
+import { formatActiveBidSummary, formatDatetime } from "@features/reservations/lib";
 
 type RecentActivityListProps = {
   reservations: ReservationRecord[];
@@ -36,6 +36,11 @@ function RecentActivityCard({ reservation, onSelectReservation }: RecentActivity
           <Text className="text-neutral-400 text-xs mt-0.5">
             {formatDatetime(reservation.scheduledAt, reservation.pickupLocation?.timeZone)}
           </Text>
+          {reservation.status === "pending" && reservation.activeBidCount > 0 ? (
+            <Text className="mt-1 text-xs font-medium text-emerald-300">
+              {formatActiveBidSummary(reservation.activeBidCount)}
+            </Text>
+          ) : null}
         </View>
 
         <ReservationStatusChip status={reservation.status} />

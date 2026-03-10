@@ -156,7 +156,7 @@ export function RideTypeCard({
       activeOpacity={0.8}
       className={`flex-row items-center rounded-2xl overflow-hidden border ${
         selected
-          ? "bg-violet-600/20 border-violet-500"
+          ? "bg-neutral-800 border-neutral-700"
           : "bg-neutral-900 border-neutral-800"
       }`}
     >
@@ -177,8 +177,8 @@ export function RideTypeCard({
         <Text className="text-neutral-500 text-sm">{arrival}</Text>
       </View>
       {selected ? (
-        <View className="w-6 h-6 rounded-full bg-violet-500 items-center justify-center mr-4">
-          <Text className="text-white text-xs">✓</Text>
+        <View className="mr-4 h-6 w-6 items-center justify-center rounded-full border border-neutral-500 bg-neutral-200">
+          <Text className="text-xs text-neutral-950">✓</Text>
         </View>
       ) : null}
     </TouchableOpacity>

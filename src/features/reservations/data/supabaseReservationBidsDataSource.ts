@@ -65,6 +65,7 @@ function mapReservationRecord(row: ReservationSelectResultRow): ReservationRecor
     status: row.status,
     driverId: row.driver_id,
     selectedBidId: row.selected_bid_id,
+    activeBidCount: 0,
     agreedFareCents: row.agreed_fare_cents,
     maxFareCents: row.max_fare_cents,
     rideType: row.ride_type,

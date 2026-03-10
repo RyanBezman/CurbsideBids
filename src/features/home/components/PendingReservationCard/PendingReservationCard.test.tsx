@@ -10,6 +10,7 @@ function buildReservation(): ReservationRecord {
     status: "pending",
     driverId: null,
     selectedBidId: null,
+    activeBidCount: 0,
     agreedFareCents: null,
     maxFareCents: 1800,
     rideType: "Economy",

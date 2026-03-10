@@ -11,6 +11,7 @@ function buildReservation(overrides: Partial<ReservationRecord>): ReservationRec
     status: "pending",
     driverId: null,
     selectedBidId: null,
+    activeBidCount: 0,
     agreedFareCents: null,
     maxFareCents: 2400,
     rideType: "Economy",
@@ -66,7 +67,7 @@ describe("HomeScreenLoggedIn", () => {
 
   it("renders rider timeline and recent trips", () => {
     const reservations = [
-      buildReservation({ status: "pending" }),
+      buildReservation({ status: "pending", activeBidCount: 2 }),
       buildReservation({ id: "reservation-2", status: "completed" }),
     ];
 
@@ -88,6 +89,8 @@ describe("HomeScreenLoggedIn", () => {
     });
 
     expect(hasText(tree!, "Ride Status")).toBe(true);
+    expect(hasText(tree!, "Offers Ready")).toBe(true);
+    expect(hasText(tree!, "Review offers")).toBe(true);
     expect(hasText(tree!, "Recent Trips")).toBe(true);
   });
 
