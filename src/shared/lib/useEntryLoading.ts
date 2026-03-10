@@ -38,6 +38,12 @@ export function useEntryLoading(
     setAssetsReady(false);
     void Promise.all(
       assetModules.map((moduleId) => {
+        if (
+          typeof Image.resolveAssetSource !== "function" ||
+          typeof Image.prefetch !== "function"
+        ) {
+          return Promise.resolve(undefined);
+        }
         const resolvedSource = Image.resolveAssetSource(moduleId);
         const uri = resolvedSource?.uri;
         if (!uri) return Promise.resolve(undefined);
