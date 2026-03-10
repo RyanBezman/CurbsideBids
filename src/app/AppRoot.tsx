@@ -35,6 +35,8 @@ export function AppRoot() {
   const {
     dropoff,
     dropoffLocation,
+    estimatedTripMiles,
+    estimatedTripMinutes,
     handleDropoffChange,
     handleDropoffSelectSuggestion,
     handlePickupChange,
@@ -42,10 +44,12 @@ export function AppRoot() {
     pickup,
     pickupLocation,
     pickupPlaceholder,
+    maxFareCents,
     rideType,
     scheduleDate,
     setDropoff,
     setDropoffLocation,
+    setMaxFareCents,
     setRideType,
     setScheduleDate,
     primePickupForRoute,
@@ -91,6 +95,7 @@ export function AppRoot() {
     onNavigate,
     pickup,
     pickupLocation,
+    maxFareCents,
     rideType,
     scheduleDate,
     setDropoff,
@@ -152,6 +157,7 @@ export function AppRoot() {
                 user={user}
                 onSignOut={handleSignOut}
                 onNavigate={onNavigate}
+                onRefreshReservations={() => loadRecentReservations(user.id)}
                 recentReservations={recentReservations}
                 isLoadingRecentReservations={isLoadingRecentReservations}
                 isSyncingNewPendingReservation={isSyncingNewPendingReservation}
@@ -232,7 +238,11 @@ export function AppRoot() {
             <ScheduleScreen
               pickup={pickup}
               pickupPlaceholder={pickupPlaceholder}
+              pickupTimeZone={pickupLocation?.timeZone}
               dropoff={dropoff}
+              estimatedTripMiles={estimatedTripMiles}
+              estimatedTripMinutes={estimatedTripMinutes}
+              maxFareCents={maxFareCents}
               rideType={rideType}
               scheduleDate={scheduleDate}
               onPickupChange={handlePickupChange}
@@ -240,6 +250,7 @@ export function AppRoot() {
               onDropoffChange={handleDropoffChange}
               onDropoffSelectSuggestion={handleDropoffSelectSuggestion}
               onRideTypeChange={setRideType}
+              onMaxFareChange={setMaxFareCents}
               onScheduleDateChange={setScheduleDate}
               onFindRides={handleScheduleFindRides}
               isSubmitting={isSchedulingRide}

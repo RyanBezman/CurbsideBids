@@ -16,6 +16,7 @@ import {
 } from "../../../shared/ui";
 import { useEntryLoading } from "../../../shared/lib";
 import {
+  MaxFareSection,
   LocationSection,
   RideTypeSection,
   ScheduleDateTimeSection,
@@ -24,13 +25,18 @@ import {
 type ScheduleScreenProps = {
   pickup: string;
   pickupPlaceholder?: string;
+  pickupTimeZone?: string;
   dropoff: string;
+  estimatedTripMiles: number | null;
+  estimatedTripMinutes: number | null;
+  maxFareCents: number;
   rideType: RideType;
   scheduleDate: Date;
   onPickupChange: (v: string) => void;
   onPickupSelectSuggestion?: (s: PlaceSuggestion) => void;
   onDropoffChange: (v: string) => void;
   onDropoffSelectSuggestion?: (s: PlaceSuggestion) => void;
+  onMaxFareChange: (value: number) => void;
   onRideTypeChange: (v: RideType) => void;
   onScheduleDateChange: (d: Date) => void;
   onFindRides: () => void;
@@ -41,13 +47,18 @@ type ScheduleScreenProps = {
 export function ScheduleScreen({
   pickup,
   pickupPlaceholder,
+  pickupTimeZone,
   dropoff,
+  estimatedTripMiles,
+  estimatedTripMinutes,
+  maxFareCents,
   rideType,
   scheduleDate,
   onPickupChange,
   onPickupSelectSuggestion,
   onDropoffChange,
   onDropoffSelectSuggestion,
+  onMaxFareChange,
   onRideTypeChange,
   onScheduleDateChange,
   onFindRides,
@@ -112,6 +123,7 @@ export function ScheduleScreen({
 
         <ScheduleDateTimeSection
           scheduleDate={scheduleDate}
+          pickupTimeZone={pickupTimeZone}
           onScheduleDateChange={onScheduleDateChange}
         />
 
@@ -119,6 +131,13 @@ export function ScheduleScreen({
           rideType={rideType}
           onRideTypeChange={onRideTypeChange}
           isLoading={isRideTypeLoading}
+        />
+
+        <MaxFareSection
+          estimatedTripMiles={estimatedTripMiles}
+          estimatedTripMinutes={estimatedTripMinutes}
+          maxFareCents={maxFareCents}
+          onMaxFareChange={onMaxFareChange}
         />
       </View>
     </ScreenScaffold>

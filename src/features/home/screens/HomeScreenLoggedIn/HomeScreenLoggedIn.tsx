@@ -25,6 +25,7 @@ type HomeScreenLoggedInProps = {
   user: User;
   onSignOut: () => void;
   onNavigate: (route: AppRouteName) => void;
+  onRefreshReservations: () => Promise<void>;
   recentReservations: ReservationRecord[];
   isLoadingRecentReservations: boolean;
   isSyncingNewPendingReservation: boolean;
@@ -36,6 +37,7 @@ export function HomeScreenLoggedIn({
   user,
   onSignOut,
   onNavigate,
+  onRefreshReservations,
   recentReservations,
   isLoadingRecentReservations,
   isSyncingNewPendingReservation,
@@ -126,6 +128,7 @@ export function HomeScreenLoggedIn({
             onCancelReservation={onCancelReservation}
             onNavigate={onNavigate}
             onQuickActionChange={setQuickAction}
+            onSelectActiveReservation={setSelectedReservationId}
             onSelectReservation={setSelectedReservationId}
             quickAction={quickAction}
             recentActivityReservations={recentActivityReservations}
@@ -136,6 +139,7 @@ export function HomeScreenLoggedIn({
       <ReservationDetailsModal
         reservation={selectedReservation}
         isCancelingReservation={isCancelingReservation}
+        onRefreshReservations={onRefreshReservations}
         onRequestClose={() => setSelectedReservationId(null)}
         onCancelReservation={onCancelReservation}
       />

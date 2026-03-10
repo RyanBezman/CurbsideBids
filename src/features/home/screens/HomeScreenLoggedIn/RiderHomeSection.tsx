@@ -17,6 +17,7 @@ type RiderHomeSectionProps = {
   onCancelReservation: (id: string) => Promise<void>;
   onNavigate: (route: AppRouteName) => void;
   onQuickActionChange: (next: QuickAction) => void;
+  onSelectActiveReservation: (id: string) => void;
   onSelectReservation: (id: string) => void;
   quickAction: QuickAction | null;
   recentActivityReservations: ReservationRecord[];
@@ -29,6 +30,7 @@ export function RiderHomeSection({
   onCancelReservation,
   onNavigate,
   onQuickActionChange,
+  onSelectActiveReservation,
   onSelectReservation,
   quickAction,
   recentActivityReservations,
@@ -40,6 +42,7 @@ export function RiderHomeSection({
           reservation={activeReservationForTimeline}
           isCancelingReservation={isCancelingReservation}
           onCancelReservation={onCancelReservation}
+          onOpenDetails={onSelectActiveReservation}
         />
       ) : null}
       <TripSearchCard quickAction={quickAction} onNavigate={onNavigate} />

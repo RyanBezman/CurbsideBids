@@ -7,5 +7,6 @@ export {
 export {
   listDriverReservationBids,
   listReservationBids,
+  selectReservationBid,
   upsertReservationBid,
 } from "./reservationBidsApi";

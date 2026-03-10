@@ -34,7 +34,7 @@ function RecentActivityCard({ reservation, onSelectReservation }: RecentActivity
         <View className="flex-1">
           <Text className="text-white font-semibold text-sm">{reservation.rideType}</Text>
           <Text className="text-neutral-400 text-xs mt-0.5">
-            {formatDatetime(reservation.scheduledAt)}
+            {formatDatetime(reservation.scheduledAt, reservation.pickupLocation?.timeZone)}
           </Text>
         </View>
 

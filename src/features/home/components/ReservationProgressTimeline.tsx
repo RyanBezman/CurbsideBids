@@ -111,7 +111,8 @@ function TripSummaryCard({ reservation }: TripSummaryCardProps) {
             containerClassName="mt-1 ml-1"
           />
           <Text className="mt-2 text-xs text-neutral-500">
-            Scheduled for {formatDatetime(reservation.scheduledAt)}
+            Scheduled for{" "}
+            {formatDatetime(reservation.scheduledAt, reservation.pickupLocation?.timeZone)}
           </Text>
         </View>
         <ReservationVehicleThumb
@@ -128,12 +129,14 @@ type ReservationProgressTimelineProps = {
   reservation: ReservationRecord;
   isCancelingReservation: boolean;
   onCancelReservation: (reservationId: string) => Promise<void>;
+  onOpenDetails: (reservationId: string) => void;
 };
 
 export function ReservationProgressTimeline({
   reservation,
   isCancelingReservation,
   onCancelReservation,
+  onOpenDetails,
 }: ReservationProgressTimelineProps) {
   if (reservation.status === "canceled") {
     return null;
@@ -190,9 +193,16 @@ export function ReservationProgressTimeline({
       <TimelineProgress currentStep={currentStep} />
       <TripSummaryCard reservation={reservation} />
 
-      {canCancelRide ? (
-        <View className="mt-2 flex-row items-center justify-between px-1">
-          <Text className="text-xs text-neutral-500">Need to change this ride?</Text>
+      <View className="mt-2 flex-row items-center justify-between px-1">
+        <TouchableOpacity
+          onPress={() => onOpenDetails(reservation.id)}
+          activeOpacity={0.7}
+          className="px-1 py-0.5"
+        >
+          <Text className="text-xs font-medium text-neutral-300">View details</Text>
+        </TouchableOpacity>
+
+        {canCancelRide ? (
           <TouchableOpacity
             onPress={handleOpenManageActions}
             disabled={isCancelingReservation}
@@ -208,8 +218,12 @@ export function ReservationProgressTimeline({
               <Text className="text-xs font-medium text-neutral-300">Manage</Text>
             )}
           </TouchableOpacity>
-        </View>
-      ) : null}
+        ) : (
+          <Text className="text-xs text-neutral-500">
+            {reservation.status === "completed" ? "Ride complete" : "Tracking live"}
+          </Text>
+        )}
+      </View>
     </View>
   );
 }

@@ -10,7 +10,10 @@ import type {
   ScheduledReservationInsertPayload,
 } from "../../../domain";
 import { createScheduledReservation } from "../../reservations";
-import { formatScheduleForConfirmation } from "../../../shared/lib";
+import {
+  formatScheduleForConfirmation,
+  serializeWallClockDateForTimeZone,
+} from "../../../shared/lib";
 
 type UseScheduleSubmissionOptions = {
   dropoff: string;
@@ -19,6 +22,7 @@ type UseScheduleSubmissionOptions = {
   onNavigate: (route: AppRouteName) => void;
   pickup: string;
   pickupLocation: LocationPoint | null;
+  maxFareCents: number;
   rideType: RideType;
   scheduleDate: Date;
   setDropoff: (value: string) => void;
@@ -27,42 +31,17 @@ type UseScheduleSubmissionOptions = {
   user: User | null;
 };
 
-function getZonedWallClockMillis(date: Date, timeZone: string): number {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    timeZone,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: false,
-  });
-  const parts = formatter.formatToParts(date);
-  const partValue = (type: Intl.DateTimeFormatPartTypes): number => {
-    const value = parts.find((part) => part.type === type)?.value;
-    return Number(value ?? "0");
-  };
-
-  return Date.UTC(
-    partValue("year"),
-    partValue("month") - 1,
-    partValue("day"),
-    partValue("hour"),
-    partValue("minute"),
-    partValue("second"),
-  );
-}
-
 function getLeadTimeMillis(scheduleDate: Date, pickupTimeZone?: string): number {
   if (!pickupTimeZone) {
     return scheduleDate.getTime() - Date.now();
   }
 
   try {
-    const nowZoned = getZonedWallClockMillis(new Date(), pickupTimeZone);
-    const scheduledZoned = getZonedWallClockMillis(scheduleDate, pickupTimeZone);
-    return scheduledZoned - nowZoned;
+    return (
+      new Date(
+        serializeWallClockDateForTimeZone(scheduleDate, pickupTimeZone),
+      ).getTime() - Date.now()
+    );
   } catch {
     return scheduleDate.getTime() - Date.now();
   }
@@ -75,6 +54,7 @@ export function useScheduleSubmission({
   onNavigate,
   pickup,
   pickupLocation,
+  maxFareCents,
   rideType,
   scheduleDate,
   setDropoff,
@@ -110,6 +90,10 @@ export function useScheduleSubmission({
       Alert.alert("Missing ride type", "Please select a ride type.");
       return null;
     }
+    if (!Number.isInteger(maxFareCents) || maxFareCents <= 0) {
+      Alert.alert("Missing budget", "Please set the maximum amount you want to pay.");
+      return null;
+    }
 
     const leadTimeMillis = getLeadTimeMillis(scheduleDate, pickupLocation?.timeZone);
     if (leadTimeMillis < 60 * 60 * 1000) {
@@ -126,8 +110,12 @@ export function useScheduleSubmission({
       dropoff: trimmedDropoff,
       pickupLocation,
       dropoffLocation,
+      maxFareCents,
       rideType,
-      scheduledAtIso: scheduleDate.toISOString(),
+      scheduledAtIso: serializeWallClockDateForTimeZone(
+        scheduleDate,
+        pickupLocation?.timeZone,
+      ),
     };
   };
 
@@ -161,7 +149,10 @@ export function useScheduleSubmission({
       await loadRecentReservations(user.id);
       Alert.alert(
         "Ride scheduled",
-        `Your ${payload.rideType} ride is scheduled for ${formatScheduleForConfirmation(payload.scheduledAtIso)}.\n\n${payload.pickup} -> ${payload.dropoff}`,
+        `Your ${payload.rideType} ride is scheduled for ${formatScheduleForConfirmation(
+          payload.scheduledAtIso,
+          payload.pickupLocation?.timeZone,
+        )}.\n\n${payload.pickup} -> ${payload.dropoff}`,
         [{ text: "OK", onPress: () => onNavigate("home") }],
       );
     } catch (error) {

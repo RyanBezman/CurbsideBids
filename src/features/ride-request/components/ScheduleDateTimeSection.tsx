@@ -1,28 +1,42 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useState } from "react";
 import { Platform, Text, TouchableOpacity, View } from "react-native";
+import { getInitialScheduleDate } from "../hooks/scheduleDate";
+import {
+  getWallClockDateInTimeZone,
+  serializeWallClockDateForTimeZone,
+} from "../../../shared/lib";
 
-function formatScheduleDatetime(value: Date): string {
-  const date = value.toLocaleDateString("en-US", {
+function formatScheduleDatetime(value: Date, timeZone?: string): string {
+  const displayDate = new Date(serializeWallClockDateForTimeZone(value, timeZone));
+  const date = displayDate.toLocaleDateString("en-US", {
     weekday: "short",
     month: "short",
     day: "numeric",
+    timeZone,
   });
-  const time = value.toLocaleTimeString("en-US", {
+  const time = displayDate.toLocaleTimeString("en-US", {
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
+    timeZone,
   });
   return `${date} • ${time}`;
 }
 
+function getPickerDate(value: Date, timeZone?: string): Date {
+  return new Date(serializeWallClockDateForTimeZone(value, timeZone));
+}
+
 type ScheduleDateTimeSectionProps = {
   scheduleDate: Date;
+  pickupTimeZone?: string;
   onScheduleDateChange: (value: Date) => void;
 };
 
 export function ScheduleDateTimeSection({
   scheduleDate,
+  pickupTimeZone,
   onScheduleDateChange,
 }: ScheduleDateTimeSectionProps) {
   const [showPicker, setShowPicker] = useState(false);
@@ -36,9 +50,14 @@ export function ScheduleDateTimeSection({
     }
 
     if (event.type === "set" && selectedDate) {
-      onScheduleDateChange(selectedDate);
+      onScheduleDateChange(getWallClockDateInTimeZone(selectedDate, pickupTimeZone));
     }
   };
+
+  const minimumDate = getPickerDate(
+    getInitialScheduleDate(getWallClockDateInTimeZone(new Date(), pickupTimeZone)),
+    pickupTimeZone,
+  );
 
   return (
     <>
@@ -48,21 +67,26 @@ export function ScheduleDateTimeSection({
         className="bg-neutral-900 rounded-2xl px-5 py-4 flex-row items-center border border-neutral-800 mb-5"
       >
         <View className="w-3 h-3 rounded-full bg-amber-500 mr-4" />
-        <Text className="text-white text-base flex-1">{formatScheduleDatetime(scheduleDate)}</Text>
+        <Text className="text-white text-base flex-1">
+          {formatScheduleDatetime(scheduleDate, pickupTimeZone)}
+        </Text>
         <Text className="text-violet-400">⌄</Text>
       </TouchableOpacity>
 
+      {pickupTimeZone ? (
+        <Text className="text-neutral-500 text-xs -mt-3 mb-4 ml-1">
+          Times shown for pickup location ({pickupTimeZone})
+        </Text>
+      ) : null}
+
       {showPicker ? (
         <DateTimePicker
-          value={scheduleDate}
+          value={getPickerDate(scheduleDate, pickupTimeZone)}
           mode="datetime"
-          minimumDate={(() => {
-            const value = new Date();
-            value.setSeconds(0, 0);
-            return value;
-          })()}
+          minimumDate={minimumDate}
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={handlePickerChange}
+          timeZoneName={pickupTimeZone}
           textColor="#9ca3af"
           themeVariant="dark"
         />

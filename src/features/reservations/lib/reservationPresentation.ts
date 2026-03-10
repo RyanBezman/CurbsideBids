@@ -1,11 +1,12 @@
 import type { ReservationStatus } from "@domain/reservations";
 
-export function formatDatetime(iso: string): string {
+export function formatDatetime(iso: string, timeZone?: string): string {
   return new Date(iso).toLocaleString("en-US", {
     month: "short",
     day: "numeric",
     hour: "numeric",
     minute: "2-digit",
+    timeZone,
   });
 }
 

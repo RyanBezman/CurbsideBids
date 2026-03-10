@@ -6,6 +6,7 @@ import { formatDatetime } from "@features/reservations/lib";
 type PendingReservationCardHeaderProps = {
   rideType: string;
   scheduledAt: string;
+  scheduledTimeZone?: string;
   estimatedTripMinutes: number | null;
   rideImage: ImageSourcePropType | null;
 };
@@ -13,6 +14,7 @@ type PendingReservationCardHeaderProps = {
 export function PendingReservationCardHeader({
   rideType,
   scheduledAt,
+  scheduledTimeZone,
   estimatedTripMinutes,
   rideImage,
 }: PendingReservationCardHeaderProps) {
@@ -22,7 +24,9 @@ export function PendingReservationCardHeader({
 
       <View className="flex-1">
         <Text className="text-white font-semibold text-sm">{rideType}</Text>
-        <Text className="text-neutral-400 text-xs mt-0.5">{formatDatetime(scheduledAt)}</Text>
+        <Text className="text-neutral-400 text-xs mt-0.5">
+          {formatDatetime(scheduledAt, scheduledTimeZone)}
+        </Text>
       </View>
 
       <View className="px-2.5 py-1 rounded-full bg-neutral-800 border border-neutral-700">

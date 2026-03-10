@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ReservationBidRecord, ReservationRecord } from "@domain/reservations";
+import {
+  formatBidAmount,
+  type ReservationBidRecord,
+  type ReservationRecord,
+} from "@domain/reservations";
 import type { PendingReservationCardBidInput } from "@features/home/components";
 import { listDriverReservationBids, upsertReservationBid } from "@features/reservations";
 
@@ -75,6 +79,17 @@ export function useDriverReservationBids({
     async ({ reservation, estimatedTripMinutes, input }: SubmitBidInput) => {
       setSubmittingBidReservationId(reservation.id);
       try {
+        if (
+          reservation.maxFareCents !== null &&
+          input.amountCents > reservation.maxFareCents
+        ) {
+          throw new Error(
+            `This rider only accepts bids up to ${formatBidAmount(
+              reservation.maxFareCents,
+            )}.`,
+          );
+        }
+
         const bid = await upsertReservationBidFn(
           {
             reservationId: reservation.id,

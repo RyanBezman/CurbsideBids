@@ -82,9 +82,20 @@ export function useAuthFlow({ onNavigate, onSignedOut }: UseAuthFlowOptions) {
   };
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    onSignedOut();
-    onNavigate("home");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        Alert.alert("Error", error.message);
+        return;
+      }
+
+      onSignedOut();
+      onNavigate("home");
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to sign out right now.";
+      Alert.alert("Error", message);
+    }
   };
 
   return {

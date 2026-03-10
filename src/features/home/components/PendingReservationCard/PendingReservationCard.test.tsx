@@ -11,6 +11,7 @@ function buildReservation(): ReservationRecord {
     driverId: null,
     selectedBidId: null,
     agreedFareCents: null,
+    maxFareCents: 1800,
     rideType: "Economy",
     pickupLabel: "123 Main St",
     pickupLocation: null,
@@ -119,5 +120,30 @@ describe("PendingReservationCard", () => {
       (node) => node.type === "Text" && node.props.children === "Unable to place bid",
     );
     expect(textNodes.length).toBeGreaterThan(0);
+  });
+
+  it("clamps the suggested bid to the rider max budget", () => {
+    let tree: ReturnType<typeof create>;
+    act(() => {
+      tree = create(
+        <PendingReservationCard
+          reservation={buildReservation()}
+          estimatedTripMinutes={40}
+          existingBidAmountCents={null}
+          existingBidNote={null}
+          isLoadingExistingBid={false}
+          isSubmittingBid={false}
+          onSubmitBid={jest.fn().mockResolvedValue(undefined)}
+        />,
+      );
+    });
+
+    act(() => {
+      tree!.root.findByProps({ testID: "toggle-bid-composer" }).props.onPress();
+    });
+
+    expect(tree!.root.findByProps({ testID: "selected-bid-amount" }).props.children).toBe(
+      "$18.00",
+    );
   });
 });

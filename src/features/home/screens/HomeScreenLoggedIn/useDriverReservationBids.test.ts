@@ -11,6 +11,7 @@ function buildReservation(id: string): ReservationRecord {
     driverId: null,
     selectedBidId: null,
     agreedFareCents: null,
+    maxFareCents: 2400,
     rideType: "Economy",
     pickupLabel: "A",
     pickupLocation: null,
@@ -28,7 +29,7 @@ async function flushMicrotasks() {
   });
 }
 
-describe("useDriverReservationBids", () => {
+describe("useDriverReservationBids loading", () => {
   it("loads bids and filters to current reservation ids", async () => {
     const reservationIds = ["res-1"];
     const listDriverReservationBidsFn = jest.fn().mockResolvedValue([
@@ -77,7 +78,9 @@ describe("useDriverReservationBids", () => {
     expect(hookState?.driverBidsByReservationId["res-other"]).toBeUndefined();
     expect(listDriverReservationBidsFn).toHaveBeenCalledWith("driver-1", 200);
   });
+});
 
+describe("useDriverReservationBids submission", () => {
   it("submits bid and clears submitting state", async () => {
     const reservation = buildReservation("res-99");
     const reservationIds = [reservation.id];
@@ -134,5 +137,52 @@ describe("useDriverReservationBids", () => {
     );
     expect(hookState?.submittingBidReservationId).toBeNull();
     expect(hookState?.driverBidsByReservationId["res-99"]?.id).toBe("bid-99");
+  });
+});
+
+describe("useDriverReservationBids rider max budget", () => {
+  it("rejects driver bids above the rider max budget before submission", async () => {
+    const reservation = buildReservation("res-100");
+    const reservationIds = [reservation.id];
+    const listDriverReservationBidsFn = jest.fn().mockResolvedValue([]);
+    const upsertReservationBidFn = jest.fn();
+    let hookState: ReturnType<typeof useDriverReservationBids> | null = null;
+
+    function HookHarness() {
+      hookState = useDriverReservationBids({
+        isDriver: true,
+        reservationIds,
+        userId: "driver-1",
+        listDriverReservationBidsFn,
+        upsertReservationBidFn,
+      });
+      return null;
+    }
+
+    act(() => {
+      create(createElement(HookHarness));
+    });
+    await flushMicrotasks();
+
+    let thrownError: unknown;
+    await act(async () => {
+      try {
+        await hookState?.submitBidForReservation({
+          reservation,
+          estimatedTripMinutes: 18,
+          input: {
+            amountCents: 2500,
+            note: null,
+          },
+        });
+      } catch (error) {
+        thrownError = error;
+      }
+    });
+
+    expect(thrownError).toEqual(
+      new Error("This rider only accepts bids up to $24.00."),
+    );
+    expect(upsertReservationBidFn).not.toHaveBeenCalled();
   });
 });

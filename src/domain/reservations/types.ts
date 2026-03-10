@@ -23,6 +23,7 @@ export type SchedulePayload = {
   dropoff: string;
   pickupLocation?: LocationPoint | null;
   dropoffLocation?: LocationPoint | null;
+  maxFareCents: number;
   rideType: RideType;
   scheduledAt: Date;
 };
@@ -33,6 +34,7 @@ export type ScheduledReservationInsertPayload = {
   dropoff: string;
   pickupLocation?: LocationPoint | null;
   dropoffLocation?: LocationPoint | null;
+  maxFareCents: number;
   rideType: RideType;
   scheduledAtIso: string;
 };
@@ -44,6 +46,7 @@ export type ReservationRecord = {
   driverId: string | null;
   selectedBidId: string | null;
   agreedFareCents: number | null;
+  maxFareCents: number | null;
   rideType: RideType;
   pickupLabel: string;
   pickupLocation: LocationPoint | null;

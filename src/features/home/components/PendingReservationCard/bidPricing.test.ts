@@ -1,6 +1,7 @@
 import {
   buildBidWheelOptions,
   clampBidAmount,
+  getFareGuidanceCents,
   getClosestWheelIndex,
   getSuggestedBidAmountCents,
   MIN_BID_CENTS,
@@ -21,5 +22,20 @@ describe("bidPricing", () => {
 
     const nearestIndex = getClosestWheelIndex(options, 2250);
     expect(options[nearestIndex]).toBe(2200);
+  });
+
+  it("caps wheel options and selected amount at the rider max budget", () => {
+    const options = buildBidWheelOptions(2200, 1800);
+
+    expect(clampBidAmount(2200, 1800)).toBe(1800);
+    expect(options[options.length - 1]).toBe(1800);
+  });
+
+  it("builds rider fare guidance from the shared pricing model", () => {
+    const guidance = getFareGuidanceCents(10, 20);
+
+    expect(guidance.rangeMinCents).toBeLessThan(guidance.defaultMaxFareCents);
+    expect(guidance.defaultMaxFareCents).toBeGreaterThanOrEqual(guidance.baselineCents);
+    expect(guidance.rangeMaxCents).toBeGreaterThan(guidance.rangeMinCents);
   });
 });

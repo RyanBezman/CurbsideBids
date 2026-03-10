@@ -12,6 +12,7 @@ function buildReservation(overrides: Partial<ReservationRecord>): ReservationRec
     driverId: null,
     selectedBidId: null,
     agreedFareCents: null,
+    maxFareCents: 2400,
     rideType: "Economy",
     pickupLabel: "Pickup",
     pickupLocation: null,
@@ -50,6 +51,7 @@ describe("HomeScreenLoggedIn", () => {
           user={buildUser("driver-1", "driver")}
           onSignOut={jest.fn()}
           onNavigate={jest.fn()}
+          onRefreshReservations={jest.fn().mockResolvedValue(undefined)}
           recentReservations={[]}
           isLoadingRecentReservations={false}
           isSyncingNewPendingReservation={false}
@@ -75,6 +77,7 @@ describe("HomeScreenLoggedIn", () => {
           user={buildUser("rider-1", "rider")}
           onSignOut={jest.fn()}
           onNavigate={jest.fn()}
+          onRefreshReservations={jest.fn().mockResolvedValue(undefined)}
           recentReservations={reservations}
           isLoadingRecentReservations={false}
           isSyncingNewPendingReservation={false}
@@ -98,6 +101,7 @@ describe("HomeScreenLoggedIn", () => {
           user={buildUser("rider-1", "rider")}
           onSignOut={jest.fn()}
           onNavigate={jest.fn()}
+          onRefreshReservations={jest.fn().mockResolvedValue(undefined)}
           recentReservations={reservations}
           isLoadingRecentReservations={false}
           isSyncingNewPendingReservation={false}

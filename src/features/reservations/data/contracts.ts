@@ -27,4 +27,8 @@ export interface ReservationBidsDataSource {
   ): Promise<ReservationBidRecord>;
   listReservationBids(reservationId: string): Promise<ReservationBidRecord[]>;
   listDriverReservationBids(driverId: string, limit?: number): Promise<ReservationBidRecord[]>;
+  selectReservationBid(
+    reservationId: string,
+    bidId: string,
+  ): Promise<ReservationRecord>;
 }

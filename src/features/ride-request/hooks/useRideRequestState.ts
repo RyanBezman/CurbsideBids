@@ -1,5 +1,10 @@
 import { useMemo, useRef, useState } from "react";
 import * as Location from "expo-location";
+import { getFareGuidanceCents } from "../../../domain";
+import {
+  estimateTripDistanceMiles,
+  estimateTripDurationMinutes,
+} from "../../../domain/location";
 import type { PlaceSuggestion } from "../../../domain/location/placeSuggestion";
 import {
   locationPointFromDevice,
@@ -20,6 +25,7 @@ export function useRideRequestState() {
   const [dropoff, setDropoff] = useState("");
   const [pickupLocation, setPickupLocation] = useState<LocationPoint | null>(null);
   const [dropoffLocation, setDropoffLocation] = useState<LocationPoint | null>(null);
+  const [maxFareOverrideCents, setMaxFareOverrideCents] = useState<number | null>(null);
   const [rideType, setRideType] = useState<RideType>("Economy");
   const [scheduleDate, setScheduleDate] = useState<Date>(() => getInitialScheduleDate());
   const [isResolvingPickupLocation, setIsResolvingPickupLocation] = useState(false);
@@ -30,10 +36,28 @@ export function useRideRequestState() {
     () => (isResolvingPickupLocation ? "Detecting current location..." : undefined),
     [isResolvingPickupLocation],
   );
+  const estimatedTripMiles = useMemo(
+    () => estimateTripDistanceMiles(pickupLocation, dropoffLocation),
+    [dropoffLocation, pickupLocation],
+  );
+  const estimatedTripMinutes = useMemo(
+    () => estimateTripDurationMinutes(pickupLocation, dropoffLocation),
+    [dropoffLocation, pickupLocation],
+  );
+  const fareGuidance = useMemo(
+    () => getFareGuidanceCents(estimatedTripMiles, estimatedTripMinutes),
+    [estimatedTripMiles, estimatedTripMinutes],
+  );
+  const maxFareCents = maxFareOverrideCents ?? fareGuidance.defaultMaxFareCents;
+
+  const resetRoutePricing = () => {
+    setMaxFareOverrideCents(null);
+  };
 
   const handlePickupChange = (value: string) => {
     setPickup(value);
     setPickupLocation(null);
+    resetRoutePricing();
   };
 
   const handlePickupSelectSuggestion = (suggestion: PlaceSuggestion) => {
@@ -43,6 +67,7 @@ export function useRideRequestState() {
     const cachedTimeZone = pickupTimeZoneCacheRef.current.get(cacheKey);
 
     setPickupLocation(locationPointFromSuggestion(suggestion, cachedTimeZone ?? undefined));
+    resetRoutePricing();
 
     if (cachedTimeZone !== undefined) return;
 
@@ -65,10 +90,12 @@ export function useRideRequestState() {
   const handleDropoffChange = (value: string) => {
     setDropoff(value);
     setDropoffLocation(null);
+    resetRoutePricing();
   };
 
   const handleDropoffSelectSuggestion = (suggestion: PlaceSuggestion) => {
     setDropoffLocation(locationPointFromSuggestion(suggestion));
+    resetRoutePricing();
   };
 
   const fillPickupFromCurrentLocation = async () => {
@@ -136,6 +163,8 @@ export function useRideRequestState() {
   return {
     dropoff,
     dropoffLocation,
+    estimatedTripMiles,
+    estimatedTripMinutes,
     fillPickupFromCurrentLocation,
     handleDropoffChange,
     handleDropoffSelectSuggestion,
@@ -146,9 +175,14 @@ export function useRideRequestState() {
     pickupPlaceholder,
     rideType,
     scheduleDate,
+    maxFareCents,
     setDropoff,
     setDropoffLocation,
-    setRideType,
+    setRideType: (value: RideType) => {
+      setRideType(value);
+      resetRoutePricing();
+    },
+    setMaxFareCents: setMaxFareOverrideCents,
     setScheduleDate,
   };
 }

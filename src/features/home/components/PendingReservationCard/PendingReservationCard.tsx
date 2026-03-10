@@ -28,6 +28,23 @@ function ExistingBidBanner({ existingBidAmountCents, existingBidNote }: Existing
   );
 }
 
+type RiderMaxFareBannerProps = {
+  maxFareCents: number;
+};
+
+function RiderMaxFareBanner({ maxFareCents }: RiderMaxFareBannerProps) {
+  return (
+    <View className="mt-3 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2.5">
+      <Text className="text-amber-200 text-xs font-medium">
+        Rider max budget: {formatBidAmount(maxFareCents)}
+      </Text>
+      <Text className="text-amber-100/75 text-[11px] mt-1">
+        Stay at or below this amount to keep the bid valid.
+      </Text>
+    </View>
+  );
+}
+
 type BidComposerToggleButtonProps = {
   hasExistingBid: boolean;
   isBidComposerOpen: boolean;
@@ -108,6 +125,7 @@ export function PendingReservationCard({
     existingBidAmountCents,
     existingBidNote,
     onSubmitBid,
+    maxFareCents: reservation.maxFareCents,
   });
 
   return (
@@ -115,6 +133,7 @@ export function PendingReservationCard({
       <PendingReservationCardHeader
         rideType={reservation.rideType}
         scheduledAt={reservation.scheduledAt}
+        scheduledTimeZone={reservation.pickupLocation?.timeZone}
         estimatedTripMinutes={estimatedTripMinutes}
         rideImage={rideImage ?? null}
       />
@@ -129,6 +148,10 @@ export function PendingReservationCard({
           existingBidAmountCents={existingBidAmountCents}
           existingBidNote={existingBidNote}
         />
+      ) : null}
+
+      {reservation.maxFareCents !== null ? (
+        <RiderMaxFareBanner maxFareCents={reservation.maxFareCents} />
       ) : null}
 
       <BidComposerToggleButton
@@ -149,6 +172,7 @@ export function PendingReservationCard({
           hasExistingBid={hasExistingBid}
           isNoteOpen={isNoteOpen}
           isSubmittingBid={isSubmittingBid}
+          maxFareCents={reservation.maxFareCents}
           noteText={noteText}
           submissionError={submissionError}
           suggestedBidAmountCents={suggestedBidAmountCents}

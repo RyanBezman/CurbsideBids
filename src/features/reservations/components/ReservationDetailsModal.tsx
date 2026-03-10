@@ -1,138 +1,36 @@
-import {
-  ActivityIndicator,
-  Alert,
-  Modal,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import type { ImageSourcePropType } from "react-native";
+import { Alert, Modal, Pressable } from "react-native";
 import {
   canCancelReservationStatus,
   type ReservationRecord,
 } from "@domain/reservations";
 import { RIDE_OPTION_BY_TYPE } from "@domain/ride";
-import {
-  ReservationRoutePreview,
-  ReservationStatusChip,
-  ReservationVehicleThumb,
-} from "@shared/ui";
-import { formatDatetime } from "@features/reservations/lib";
+import { useReservationBidSelection } from "@features/reservations/hooks";
+import { ReservationDetailsContent } from "./ReservationDetailsContent";
 
 type ReservationDetailsModalProps = {
   reservation: ReservationRecord | null;
   isCancelingReservation: boolean;
+  onRefreshReservations?: () => Promise<void>;
   onRequestClose: () => void;
   onCancelReservation: (id: string) => Promise<void>;
 };
 
-type ReservationDetailsContentProps = {
-  canCancel: boolean;
-  isCancelingReservation: boolean;
-  onConfirmCancelRide: () => void;
-  onRequestClose: () => void;
-  reservation: ReservationRecord;
-  rideImage: ImageSourcePropType;
-};
-
-function ReservationDetailsContent({
-  canCancel,
-  isCancelingReservation,
-  onConfirmCancelRide,
-  onRequestClose,
-  reservation,
-  rideImage,
-}: ReservationDetailsContentProps) {
-  return (
-    <>
-      <View className="mb-4 items-center">
-        <View className="h-1 w-10 rounded-full bg-violet-500/40" />
-      </View>
-
-      <View className="mb-5 flex-row items-center justify-between">
-        <Text className="text-xl font-bold text-white">Ride details</Text>
-        <TouchableOpacity
-          onPress={onRequestClose}
-          disabled={isCancelingReservation}
-          className="h-9 w-9 items-center justify-center rounded-full border border-neutral-700 bg-neutral-800"
-        >
-          <Text className="text-sm text-neutral-400">✕</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View className="mb-5 rounded-2xl border border-violet-500/15 bg-neutral-950 p-3">
-        <ReservationVehicleThumb
-          source={rideImage}
-          containerClassName="h-28 w-full rounded-none bg-transparent"
-          imageClassName="h-full w-full"
-        />
-      </View>
-
-      <View className="mb-5 flex-row items-center justify-between">
-        <Text className="text-lg font-semibold text-white">{reservation.rideType}</Text>
-        <ReservationStatusChip status={reservation.status} className="px-3" />
-      </View>
-
-      <View className="mb-4 flex-row items-center rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-3">
-        <View className="mr-3 h-2.5 w-2.5 rounded-full bg-amber-400" />
-        <View className="flex-1">
-          <Text className="text-xs uppercase tracking-wide text-neutral-500">Scheduled for</Text>
-          <Text className="mt-0.5 text-sm font-medium text-white">
-            {formatDatetime(reservation.scheduledAt)}
-          </Text>
-        </View>
-      </View>
-
-      <View className="rounded-2xl border border-neutral-800 bg-neutral-950 px-4 py-4">
-        <Text className="text-xs uppercase tracking-wide text-neutral-500">Route</Text>
-        <ReservationRoutePreview
-          pickupLabel={reservation.pickupLabel}
-          dropoffLabel={reservation.dropoffLabel}
-          containerClassName="mt-2"
-          pickupTextClassName="text-sm leading-5 text-white"
-          dropoffTextClassName="text-sm leading-5 text-white mt-2"
-        />
-      </View>
-
-      <View className="mt-4 px-1">
-        <Text className="text-xs text-neutral-500 text-center">
-          Booked {formatDatetime(reservation.createdAt)}
-        </Text>
-      </View>
-
-      {canCancel ? (
-        <TouchableOpacity
-          onPress={onConfirmCancelRide}
-          disabled={isCancelingReservation}
-          className={`mt-5 rounded-2xl border py-3.5 ${
-            isCancelingReservation
-              ? "border-rose-500/25 bg-rose-500/10"
-              : "border-rose-400/45 bg-rose-500/15"
-          }`}
-        >
-          {isCancelingReservation ? (
-            <View className="flex-row items-center justify-center gap-2">
-              <ActivityIndicator color="#fda4af" size="small" />
-              <Text className="text-center font-semibold text-rose-200">Canceling...</Text>
-            </View>
-          ) : (
-            <Text className="text-center font-semibold text-rose-200">Cancel ride</Text>
-          )}
-        </TouchableOpacity>
-      ) : null}
-    </>
-  );
-}
-
 export function ReservationDetailsModal({
   reservation,
   isCancelingReservation,
+  onRefreshReservations,
   onRequestClose,
   onCancelReservation,
 }: ReservationDetailsModalProps) {
   const rideImage = reservation ? RIDE_OPTION_BY_TYPE[reservation.rideType].source : null;
   const canCancel = reservation ? canCancelReservationStatus(reservation.status) : false;
+  const { bids, isLoadingBids, isSelectingBidId, loadError, onSelectBid } =
+    useReservationBidSelection({
+      reservation,
+      onBidSelected: async () => {
+        await onRefreshReservations?.();
+      },
+    });
 
   const handleConfirmCancelRide = () => {
     if (!reservation || isCancelingReservation) return;
@@ -159,6 +57,39 @@ export function ReservationDetailsModal({
     ]);
   };
 
+  const handleSelectBid = (bidId: string) => {
+    if (!reservation) return;
+
+    Alert.alert(
+      "Choose driver",
+      "Selecting a bid ends the open bidding for this ride.",
+      [
+        { text: "Keep browsing", style: "cancel" },
+        {
+          text: "Choose driver",
+          onPress: () => {
+            void (async () => {
+              try {
+                await onSelectBid(bidId);
+                Alert.alert(
+                  "Driver selected",
+                  "Your ride has been matched. We'll keep the status updated here.",
+                );
+                onRequestClose();
+              } catch (error) {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "Unable to select this driver right now.";
+                Alert.alert("Selection failed", message);
+              }
+            })();
+          },
+        },
+      ],
+    );
+  };
+
   return (
     <Modal
       transparent
@@ -182,10 +113,15 @@ export function ReservationDetailsModal({
         >
           {reservation && rideImage ? (
             <ReservationDetailsContent
+              bids={bids}
               canCancel={canCancel}
               isCancelingReservation={isCancelingReservation}
+              isLoadingBids={isLoadingBids}
+              isSelectingBidId={isSelectingBidId}
+              loadError={loadError}
               onConfirmCancelRide={handleConfirmCancelRide}
               onRequestClose={onRequestClose}
+              onSelectBid={handleSelectBid}
               reservation={reservation}
               rideImage={rideImage}
             />

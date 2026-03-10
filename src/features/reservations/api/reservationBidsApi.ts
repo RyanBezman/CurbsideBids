@@ -1,5 +1,6 @@
 import type {
   ReservationBidRecord,
+  ReservationRecord,
   UpsertReservationBidPayload,
 } from "@domain/reservations";
 import { supabaseReservationBidsDataSource } from "@features/reservations/data";
@@ -22,4 +23,11 @@ export async function listDriverReservationBids(
   limit = 50,
 ): Promise<ReservationBidRecord[]> {
   return supabaseReservationBidsDataSource.listDriverReservationBids(driverId, limit);
+}
+
+export async function selectReservationBid(
+  reservationId: string,
+  bidId: string,
+): Promise<ReservationRecord> {
+  return supabaseReservationBidsDataSource.selectReservationBid(reservationId, bidId);
 }

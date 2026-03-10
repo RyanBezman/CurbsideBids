@@ -20,6 +20,7 @@ type UseBidComposerStateOptions = {
   estimatedTripMinutes: number | null;
   existingBidAmountCents: number | null;
   existingBidNote: string | null;
+  maxFareCents: number | null;
   onSubmitBid: (input: PendingReservationCardBidInput) => Promise<void>;
 };
 
@@ -28,6 +29,7 @@ export function useBidComposerState({
   estimatedTripMinutes,
   existingBidAmountCents,
   existingBidNote,
+  maxFareCents,
   onSubmitBid,
 }: UseBidComposerStateOptions) {
   const [isBidComposerOpen, setIsBidComposerOpen] = useState(false);
@@ -38,13 +40,17 @@ export function useBidComposerState({
   const wheelRef = useRef<ScrollView | null>(null);
 
   const suggestedBidAmountCents = useMemo(
-    () => getSuggestedBidAmountCents(estimatedTripMiles, estimatedTripMinutes),
-    [estimatedTripMiles, estimatedTripMinutes],
+    () =>
+      clampBidAmount(
+        getSuggestedBidAmountCents(estimatedTripMiles, estimatedTripMinutes),
+        maxFareCents ?? undefined,
+      ),
+    [estimatedTripMiles, estimatedTripMinutes, maxFareCents],
   );
   const wheelCenterAmountCents = existingBidAmountCents ?? suggestedBidAmountCents;
   const wheelOptions = useMemo(
-    () => buildBidWheelOptions(wheelCenterAmountCents),
-    [wheelCenterAmountCents],
+    () => buildBidWheelOptions(wheelCenterAmountCents, maxFareCents ?? undefined),
+    [wheelCenterAmountCents, maxFareCents],
   );
   const activeBidAmountCents = selectedBidAmountCents ?? suggestedBidAmountCents;
   const activeBidIndex = useMemo(
@@ -59,10 +65,19 @@ export function useBidComposerState({
   useEffect(() => {
     if (existingBidAmountCents === null) return;
 
-    setSelectedBidAmountCents(clampBidAmount(existingBidAmountCents));
+    setSelectedBidAmountCents(
+      clampBidAmount(existingBidAmountCents, maxFareCents ?? undefined),
+    );
     setNoteText(existingBidNote ?? "");
     setIsNoteOpen(Boolean(existingBidNote?.trim()));
-  }, [existingBidAmountCents, existingBidNote]);
+  }, [existingBidAmountCents, existingBidNote, maxFareCents]);
+
+  useEffect(() => {
+    setSelectedBidAmountCents((previous) => {
+      if (previous === null) return previous;
+      return clampBidAmount(previous, maxFareCents ?? undefined);
+    });
+  }, [maxFareCents]);
 
   useEffect(() => {
     if (!isBidComposerOpen || selectedBidAmountCents !== null) return;
@@ -90,12 +105,14 @@ export function useBidComposerState({
   };
 
   const handleSelectAmount = (amountCents: number) => {
-    setSelectedBidAmountCents(clampBidAmount(amountCents));
+    setSelectedBidAmountCents(clampBidAmount(amountCents, maxFareCents ?? undefined));
     setSubmissionError(null);
   };
 
   const nudgeBidAmount = (deltaCents: number) => {
-    setSelectedBidAmountCents(clampBidAmount(activeBidAmountCents + deltaCents));
+    setSelectedBidAmountCents(
+      clampBidAmount(activeBidAmountCents + deltaCents, maxFareCents ?? undefined),
+    );
     setSubmissionError(null);
   };
 
