@@ -7,7 +7,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import type { ReservationRecord } from "@domain/reservations";
+import {
+  canCancelReservationStatus,
+  type ReservationRecord,
+} from "@domain/reservations";
 import { RIDE_OPTION_BY_TYPE } from "@domain/ride";
 import { ReservationRoutePreview, ReservationVehicleThumb } from "@shared/ui";
 import { formatDatetime } from "@features/reservations/lib";
@@ -151,10 +154,7 @@ export function ReservationProgressTimeline({
   }, [pulse]);
 
   const currentStep = getTimelineStepIndex(reservation.status);
-  const canCancelRide =
-    reservation.status === "pending" ||
-    reservation.status === "bid_selected" ||
-    reservation.status === "accepted";
+  const canCancelRide = canCancelReservationStatus(reservation.status);
 
   const handleOpenManageActions = () => {
     if (!canCancelRide || isCancelingReservation) return;

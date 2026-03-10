@@ -13,6 +13,7 @@ import {
   formatPickupFromLocation,
   resolveTimeZoneForCoords,
 } from "../../../shared/lib/location";
+import { getInitialScheduleDate } from "./scheduleDate";
 
 export function useRideRequestState() {
   const [pickup, setPickup] = useState("");
@@ -20,11 +21,7 @@ export function useRideRequestState() {
   const [pickupLocation, setPickupLocation] = useState<LocationPoint | null>(null);
   const [dropoffLocation, setDropoffLocation] = useState<LocationPoint | null>(null);
   const [rideType, setRideType] = useState<RideType>("Economy");
-  const [scheduleDate, setScheduleDate] = useState<Date>(() => {
-    const value = new Date();
-    value.setHours(value.getHours() + 1, 0, 0, 0);
-    return value;
-  });
+  const [scheduleDate, setScheduleDate] = useState<Date>(() => getInitialScheduleDate());
   const [isResolvingPickupLocation, setIsResolvingPickupLocation] = useState(false);
   const isResolvingPickupLocationRef = useRef(false);
   const pickupTimeZoneCacheRef = useRef(new Map<string, string | null>());

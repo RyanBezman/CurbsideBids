@@ -9,7 +9,10 @@ import {
 } from "react-native";
 import type { User } from "@supabase/supabase-js";
 import type { AppRouteName } from "@app/navigation";
-import type { ReservationRecord } from "@domain/reservations";
+import {
+  isActiveReservationStatus,
+  type ReservationRecord,
+} from "@domain/reservations";
 import { getUserRole } from "@domain/user";
 import { ProfileCard } from "@features/home/components";
 import type { QuickAction } from "@features/home/types";
@@ -46,18 +49,15 @@ export function HomeScreenLoggedIn({
   const previousReservationIdsRef = useRef<string[]>([]);
 
   const activeReservationForTimeline = useMemo(
-    () =>
-      recentReservations.find(
-        (reservation) =>
-          reservation.status === "pending" ||
-          reservation.status === "bid_selected" ||
-          reservation.status === "accepted",
-      ) ?? null,
+    () => recentReservations.find((reservation) => isActiveReservationStatus(reservation.status)) ?? null,
     [recentReservations],
   );
 
   const recentActivityReservations = useMemo(
-    () => recentReservations.filter((reservation) => reservation.status !== "pending"),
+    () =>
+      recentReservations.filter(
+        (reservation) => !isActiveReservationStatus(reservation.status),
+      ),
     [recentReservations],
   );
 

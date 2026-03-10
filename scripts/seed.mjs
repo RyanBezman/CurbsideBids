@@ -241,6 +241,25 @@ async function createSeedReservations(createdUsers) {
   const reservationRows = riderUsers.flatMap((user, index) =>
     buildSeedReservationsForUser(user.id, index + 1)
   );
+  const userA = riderUsers.find((user) => user.email === "a@aol.com");
+
+  if (userA) {
+    reservationRows.push({
+      user_id: userA.id,
+      kind: "ride",
+      status: "pending",
+      pickup_label: "Penn Station, Manhattan",
+      pickup_lat: null,
+      pickup_lng: null,
+      dropoff_label: "JFK Airport Terminal 4",
+      dropoff_lat: null,
+      dropoff_lng: null,
+      ride_type: "Economy",
+      scheduled_at: isoAtHoursFromNow(2),
+      created_at: isoAtHoursFromNow(0),
+      canceled_at: null,
+    });
+  }
 
   const { error } = await supabase.from("reservations").insert(reservationRows);
   if (error) throw error;

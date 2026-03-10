@@ -8,7 +8,10 @@ import {
   View,
 } from "react-native";
 import type { ImageSourcePropType } from "react-native";
-import type { ReservationRecord } from "@domain/reservations";
+import {
+  canCancelReservationStatus,
+  type ReservationRecord,
+} from "@domain/reservations";
 import { RIDE_OPTION_BY_TYPE } from "@domain/ride";
 import {
   ReservationRoutePreview,
@@ -129,7 +132,7 @@ export function ReservationDetailsModal({
   onCancelReservation,
 }: ReservationDetailsModalProps) {
   const rideImage = reservation ? RIDE_OPTION_BY_TYPE[reservation.rideType].source : null;
-  const canCancel = reservation?.status === "pending" || reservation?.status === "accepted";
+  const canCancel = reservation ? canCancelReservationStatus(reservation.status) : false;
 
   const handleConfirmCancelRide = () => {
     if (!reservation || isCancelingReservation) return;

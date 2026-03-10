@@ -1,4 +1,5 @@
 import type { LocationPoint } from "@domain/location/locationPoint";
+import { CANCELABLE_RESERVATION_STATUSES } from "@domain/reservations";
 import type {
   ReservationRecord,
   ReservationStatus,
@@ -157,7 +158,7 @@ export const supabaseReservationsDataSource: ReservationsDataSource = {
       })
       .eq("id", id)
       .eq("user_id", userId)
-      .in("status", ["pending", "bid_selected", "accepted"])
+      .in("status", [...CANCELABLE_RESERVATION_STATUSES])
       .select(RESERVATION_SELECT_COLUMNS)
       .single();
 
