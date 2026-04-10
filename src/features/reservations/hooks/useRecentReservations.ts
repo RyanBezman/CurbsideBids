@@ -10,6 +10,7 @@ import {
 } from "../api";
 
 type RealtimeReservationRow = {
+  driver_id?: string | null;
   user_id?: string | null;
   kind?: string | null;
   status?: string | null;
@@ -60,12 +61,18 @@ function useReservationFeedSubscription({
 
           const touchesUserReservation =
             previous.user_id === user.id || next.user_id === user.id;
+          const touchesAssignedDriverReservation =
+            previous.driver_id === user.id || next.driver_id === user.id;
           const touchesDriverPendingReservation =
             (previous.status === "pending" &&
               (previous.kind === "ride" || previous.kind === "scheduled")) ||
             (next.status === "pending" && (next.kind === "ride" || next.kind === "scheduled"));
 
-          if ((isDriver && touchesDriverPendingReservation) || touchesUserReservation) {
+          if (
+            (isDriver &&
+              (touchesDriverPendingReservation || touchesAssignedDriverReservation)) ||
+            touchesUserReservation
+          ) {
             if (isDriver && isPendingRideInsert) {
               setIsSyncingNewPendingReservation(true);
             }

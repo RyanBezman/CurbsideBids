@@ -158,6 +158,7 @@ The database must arbitrate the winner in one transaction.
   - the rider should immediately see the reservation leave the bid-comparison state
   - losing drivers should see the reservation leave their pending queue
   - the winning driver should see the reservation become assigned and remain visible under the driver's rides section
+- After assignment, driver home should continue refreshing on reservation row changes for that assigned ride, not only while the ride is still `pending`, so transitions like `bid_selected -> accepted -> driver_en_route` and later cancellations stay in sync without waiting for polling.
 
 ## Reservation Status Semantics
 - `pending`: open to bids

@@ -9,6 +9,10 @@ const mockRemoveChannel = jest.fn();
 const mockSubscribe = jest.fn();
 
 const bidChannelCallbacks = new Map<string, () => void>();
+const reservationChannelCallbacks = new Map<
+  string,
+  (payload: { new?: unknown; old?: unknown }) => void
+>();
 
 jest.mock("@shared/api", () => ({
   supabase: {
@@ -75,9 +79,11 @@ describe("useRecentReservations", () => {
   const { listDriverHomeReservations, listRecentReservations } = jest.requireMock(
     "../api",
   ) as MockReservationsApiModule;
+  const renderedHooks: ReturnType<typeof create>[] = [];
 
   beforeEach(() => {
     bidChannelCallbacks.clear();
+    reservationChannelCallbacks.clear();
     mockSubscribe.mockReset().mockReturnValue({ unsubscribe: jest.fn() });
     mockRemoveChannel.mockReset().mockResolvedValue(undefined);
     mockChannel.mockReset().mockImplementation((name: string) => {
@@ -86,10 +92,13 @@ describe("useRecentReservations", () => {
           (
             _event: string,
             filter: { table?: string },
-            callback: () => void,
+            callback: (payload: { new?: unknown; old?: unknown }) => void,
           ) => {
+            if (filter.table === "reservations") {
+              reservationChannelCallbacks.set(name, callback);
+            }
             if (filter.table === "reservation_bids") {
-              bidChannelCallbacks.set(name, callback);
+              bidChannelCallbacks.set(name, () => callback({}));
             }
             return channel;
           },
@@ -105,6 +114,17 @@ describe("useRecentReservations", () => {
     listDriverHomeReservations.mockReset().mockResolvedValue([buildReservation()]);
   });
 
+  afterEach(() => {
+    while (renderedHooks.length > 0) {
+      const renderedHook = renderedHooks.pop();
+      if (!renderedHook) continue;
+
+      act(() => {
+        renderedHook.unmount();
+      });
+    }
+  });
+
   it("refreshes rider reservations when a visible reservation bid changes", async () => {
     let hookState: ReturnType<typeof useRecentReservations> | null = null;
 
@@ -114,7 +134,7 @@ describe("useRecentReservations", () => {
     }
 
     act(() => {
-      create(createElement(HookHarness));
+      renderedHooks.push(create(createElement(HookHarness)));
     });
 
     expect(mockChannel).toHaveBeenCalledWith("reservations-feed-rider-1");
@@ -141,11 +161,52 @@ describe("useRecentReservations", () => {
     }
 
     act(() => {
-      create(createElement(HookHarness));
+      renderedHooks.push(create(createElement(HookHarness)));
     });
 
     await act(async () => {
       await hookState?.loadRecentReservations("driver-1");
+    });
+    await flushMicrotasks();
+
+    expect(listDriverHomeReservations).toHaveBeenCalledWith("driver-1", 100);
+  });
+
+  it("refreshes driver reservations when an assigned ride changes after selection", async () => {
+    let hookState: ReturnType<typeof useRecentReservations> | null = null;
+
+    function HookHarness() {
+      hookState = useRecentReservations(buildUser("driver-1", "driver"));
+      return null;
+    }
+
+    act(() => {
+      renderedHooks.push(create(createElement(HookHarness)));
+    });
+
+    await act(async () => {
+      await hookState?.loadRecentReservations("driver-1");
+    });
+    await flushMicrotasks();
+
+    listDriverHomeReservations.mockClear();
+
+    await act(async () => {
+      reservationChannelCallbacks.get("reservations-feed-driver-1")?.({
+        old: {
+          id: "reservation-1",
+          driver_id: "driver-1",
+          kind: "scheduled",
+          status: "accepted",
+        },
+        new: {
+          id: "reservation-1",
+          driver_id: "driver-1",
+          kind: "scheduled",
+          status: "driver_en_route",
+        },
+      });
+      await Promise.resolve();
     });
     await flushMicrotasks();
 
