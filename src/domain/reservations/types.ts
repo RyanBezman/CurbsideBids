@@ -46,6 +46,7 @@ export type ReservationRecord = {
   driverId: string | null;
   selectedBidId: string | null;
   activeBidCount: number;
+  lowestActiveBidAmountCents: number | null;
   agreedFareCents: number | null;
   maxFareCents: number | null;
   rideType: RideType;

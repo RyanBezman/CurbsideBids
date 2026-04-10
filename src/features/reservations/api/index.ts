@@ -1,6 +1,7 @@
 export {
   cancelReservation,
   createScheduledReservation,
+  listDriverHomeReservations,
   listPendingRideReservations,
   listRecentReservations,
 } from "./reservationsApi";

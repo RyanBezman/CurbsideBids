@@ -22,6 +22,7 @@ function buildReservation(
     driverId: null,
     selectedBidId: null,
     activeBidCount: 0,
+    lowestActiveBidAmountCents: null,
     agreedFareCents: null,
     maxFareCents: 2400,
     rideType: "Economy",

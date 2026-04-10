@@ -4,6 +4,7 @@ import { useRecentReservations } from "@features/reservations";
 
 export function useHomeFlow(user: User | null) {
   const {
+    cancelingReservationId,
     handleCancelReservation,
     isCancelingReservation,
     isLoadingRecentReservations,
@@ -23,6 +24,7 @@ export function useHomeFlow(user: User | null) {
   }, [loadRecentReservations, resetRecentReservations, user]);
 
   return {
+    cancelingReservationId,
     handleCancelReservation,
     isCancelingReservation,
     isLoadingRecentReservations,

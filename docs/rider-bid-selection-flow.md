@@ -128,6 +128,9 @@ The database must arbitrate the winner in one transaction.
 - Driver bid controls must surface the rider max budget when present.
 - Driver bid controls must clamp suggestions, wheel options, and manual adjustments to the rider cap when present.
 - Drivers should see pending reservations disappear once a reservation is no longer `pending`.
+- When a rider selects the driver's bid, that reservation should move from the driver's pending marketplace section into a driver rides section instead of disappearing from the home screen entirely.
+- Driver rides cards should not continue emphasizing bid-marketplace labels once the driver has already won the ride.
+- Drivers should be able to open ride details from the driver rides section and cancel while the reservation is still in a cancelable state.
 - Drivers should not be able to continue editing a bid after selection.
 
 ### Rider Side
@@ -143,15 +146,18 @@ The database must arbitrate the winner in one transaction.
 - While a reservation is still `pending`, the rider home screen should surface live bidding state:
   - `Waiting for bids` when no active driver offers exist yet
   - `Offers Ready` once one or more active bids exist
+- When bids exist, the rider home screen should show concrete bid summary data on the ride status card, including the live offer count and current best offer, so the change is visible without opening reservation details.
 - The rider home screen should expose a clear review action when active bids exist so the rider can open the reservation details modal and compare offers.
 
 ### Realtime Expectations
 - New incoming bids should appear without requiring a manual refresh.
 - The rider home screen should refresh when visible `reservation_bids` rows change so pending rides update their live status and offer count without reopening the app.
+- Riders should receive an in-app prompt when a new bid arrives for their active pending reservation so they can jump directly into offer review.
+- Riders should receive an in-app prompt when a selected ride transitions to `accepted` so they know the driver confirmed the match.
 - Once a bid is selected:
   - the rider should immediately see the reservation leave the bid-comparison state
   - losing drivers should see the reservation leave their pending queue
-  - the winning driver should see the reservation become assigned
+  - the winning driver should see the reservation become assigned and remain visible under the driver's rides section
 
 ## Reservation Status Semantics
 - `pending`: open to bids

@@ -3,6 +3,10 @@ import type { ReservationRecord } from "@domain/reservations";
 
 const TIMELINE_STEPS = ["Requested", "Accepted", "Active", "Completed"] as const;
 
+function formatIncomingBidStatusLabel(activeBidCount: number): string {
+  return activeBidCount === 1 ? "1 offer received" : `${activeBidCount} offers received`;
+}
+
 export function getTimelineStepIndex(status: string): number {
   if (status === "pending") return 0;
   if (status === "bid_selected" || status === "accepted") return 1;
@@ -13,7 +17,9 @@ export function getTimelineStepIndex(status: string): number {
 
 export function getLiveStatusLabel(reservation: ReservationRecord): string {
   if (reservation.status === "pending") {
-    return reservation.activeBidCount > 0 ? "Offers Ready" : "Waiting for bids";
+    return reservation.activeBidCount > 0
+      ? formatIncomingBidStatusLabel(reservation.activeBidCount)
+      : "Waiting for bids";
   }
 
   return TIMELINE_STEPS[getTimelineStepIndex(reservation.status)] ?? TIMELINE_STEPS[0];

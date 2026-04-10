@@ -1,5 +1,5 @@
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
-import type { ReservationRecord } from "@domain/reservations";
+import { formatBidAmount, type ReservationRecord } from "@domain/reservations";
 import { RIDE_OPTION_BY_TYPE } from "@domain/ride";
 import {
   ReservationRoutePreview,
@@ -39,6 +39,9 @@ function RecentActivityCard({ reservation, onSelectReservation }: RecentActivity
           {reservation.status === "pending" && reservation.activeBidCount > 0 ? (
             <Text className="mt-1 text-xs font-medium text-emerald-300">
               {formatActiveBidSummary(reservation.activeBidCount)}
+              {reservation.lowestActiveBidAmountCents !== null
+                ? ` · best ${formatBidAmount(reservation.lowestActiveBidAmountCents)}`
+                : ""}
             </Text>
           ) : null}
         </View>

@@ -3,9 +3,13 @@ import { ActivityIndicator, Alert, Text, View } from "react-native";
 import { estimateTripDurationMinutes } from "@domain/location";
 import type { ReservationRecord } from "@domain/reservations";
 import { PendingReservationCard } from "@features/home/components";
+import { DriverAssignedRideList } from "./DriverAssignedRideList";
 import { useDriverReservationBids } from "./useDriverReservationBids";
 
 type DriverHomeSectionProps = {
+  cancelingReservationId: string | null;
+  isCancelingReservation: boolean;
+  onCancelReservation: (reservationId: string) => Promise<void>;
   recentReservations: ReservationRecord[];
   userId: string;
   isLoadingRecentReservations: boolean;
@@ -40,14 +44,28 @@ function EmptyPendingList({ isLoading }: { isLoading: boolean }) {
 }
 
 export function DriverHomeSection({
+  cancelingReservationId,
+  isCancelingReservation,
   isLoadingRecentReservations,
   isSyncingNewPendingReservation,
+  onCancelReservation,
   recentReservations,
   userId,
 }: DriverHomeSectionProps) {
-  const reservationIds = useMemo(
-    () => recentReservations.map((reservation) => reservation.id),
+  const pendingReservations = useMemo(
+    () => recentReservations.filter((reservation) => reservation.status === "pending"),
     [recentReservations],
+  );
+  const driverReservations = useMemo(
+    () =>
+      recentReservations.filter(
+        (reservation) => reservation.driverId === userId && reservation.status !== "pending",
+      ),
+    [recentReservations, userId],
+  );
+  const reservationIds = useMemo(
+    () => pendingReservations.map((reservation) => reservation.id),
+    [pendingReservations],
   );
   const {
     driverBidsByReservationId,
@@ -62,7 +80,7 @@ export function DriverHomeSection({
 
   return (
     <>
-      <DriverStats pendingCount={recentReservations.length} />
+      <DriverStats pendingCount={pendingReservations.length} />
 
       <Text className="text-white text-lg font-semibold mb-4">Pending Reservation Rides</Text>
       {isSyncingNewPendingReservation ? (
@@ -73,13 +91,13 @@ export function DriverHomeSection({
       ) : null}
 
       <View className="mb-8">
-        {isLoadingRecentReservations && recentReservations.length === 0 ? (
+        {isLoadingRecentReservations && pendingReservations.length === 0 ? (
           <EmptyPendingList isLoading />
-        ) : recentReservations.length === 0 ? (
+        ) : pendingReservations.length === 0 ? (
           <EmptyPendingList isLoading={false} />
         ) : (
           <View className="gap-3">
-            {recentReservations.map((reservation) => {
+            {pendingReservations.map((reservation) => {
               const existingBid = driverBidsByReservationId[reservation.id] ?? null;
               const isSubmittingBid = submittingBidReservationId === reservation.id;
               const estimatedTripMinutes = estimateTripDurationMinutes(
@@ -116,6 +134,16 @@ export function DriverHomeSection({
             })}
           </View>
         )}
+      </View>
+
+      <Text className="mb-4 text-lg font-semibold text-white">Your rides</Text>
+      <View className="mb-8">
+        <DriverAssignedRideList
+          cancelingReservationId={cancelingReservationId}
+          reservations={driverReservations}
+          isCancelingReservation={isCancelingReservation}
+          onCancelReservation={onCancelReservation}
+        />
       </View>
     </>
   );

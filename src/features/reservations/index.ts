@@ -3,6 +3,7 @@ export { useRecentReservations } from "./hooks";
 export {
   cancelReservation,
   createScheduledReservation,
+  listDriverHomeReservations,
   listDriverReservationBids,
   listPendingRideReservations,
   listReservationBids,

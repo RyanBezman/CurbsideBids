@@ -33,6 +33,12 @@ type ReservationRow = {
 
 type ReservationBidCountRow = {
   reservation_id: string;
+  amount_cents: number;
+};
+
+type ReservationBidSummary = {
+  activeBidCount: number;
+  lowestActiveBidAmountCents: number | null;
 };
 
 const RESERVATION_SELECT_COLUMNS =
@@ -67,6 +73,7 @@ function mapReservationRow(row: ReservationRow): ReservationRecord {
     driverId: row.driver_id,
     selectedBidId: row.selected_bid_id,
     activeBidCount: 0,
+    lowestActiveBidAmountCents: null,
     agreedFareCents: row.agreed_fare_cents,
     maxFareCents: row.max_fare_cents,
     rideType: row.ride_type,
@@ -92,14 +99,14 @@ function mapReservationRow(row: ReservationRow): ReservationRecord {
 
 async function loadActiveBidCounts(
   reservationIds: string[],
-): Promise<Record<string, number>> {
+): Promise<Record<string, ReservationBidSummary>> {
   if (reservationIds.length === 0) {
     return {};
   }
 
   const { data, error } = await supabase
     .from("reservation_bids")
-    .select("reservation_id")
+    .select("reservation_id, amount_cents")
     .in("reservation_id", reservationIds)
     .eq("status", "active");
 
@@ -107,13 +114,24 @@ async function loadActiveBidCounts(
     throw new Error(error.message || "Failed to load active reservation bid counts.");
   }
 
-  const counts: Record<string, number> = {};
+  const summaries: Record<string, ReservationBidSummary> = {};
   for (const row of data ?? []) {
-    const reservationId = (row as ReservationBidCountRow).reservation_id;
-    counts[reservationId] = (counts[reservationId] ?? 0) + 1;
+    const bid = row as ReservationBidCountRow;
+    const currentSummary = summaries[bid.reservation_id] ?? {
+      activeBidCount: 0,
+      lowestActiveBidAmountCents: null,
+    };
+
+    summaries[bid.reservation_id] = {
+      activeBidCount: currentSummary.activeBidCount + 1,
+      lowestActiveBidAmountCents:
+        currentSummary.lowestActiveBidAmountCents === null
+          ? bid.amount_cents
+          : Math.min(currentSummary.lowestActiveBidAmountCents, bid.amount_cents),
+    };
   }
 
-  return counts;
+  return summaries;
 }
 
 async function attachActiveBidCounts(
@@ -126,12 +144,22 @@ async function attachActiveBidCounts(
 
     return reservations.map((reservation) => ({
       ...reservation,
-      activeBidCount: countsByReservationId[reservation.id] ?? 0,
+      activeBidCount: countsByReservationId[reservation.id]?.activeBidCount ?? 0,
+      lowestActiveBidAmountCents:
+        countsByReservationId[reservation.id]?.lowestActiveBidAmountCents ?? null,
     }));
   } catch (error) {
     console.warn("Unable to load active reservation bid counts", error);
     return reservations;
   }
+}
+
+function sortReservationsByCreatedAt(
+  reservations: ReservationRecord[],
+): ReservationRecord[] {
+  return [...reservations].sort((left, right) =>
+    right.createdAt.localeCompare(left.createdAt),
+  );
 }
 
 export const supabaseReservationsDataSource: ReservationsDataSource = {
@@ -204,6 +232,48 @@ export const supabaseReservationsDataSource: ReservationsDataSource = {
     );
   },
 
+  async listDriverHomeReservations(
+    driverId: string,
+    limit = 100,
+  ): Promise<ReservationRecord[]> {
+    const [pendingResult, driverResult] = await Promise.all([
+      supabase
+        .from("reservations")
+        .select(RESERVATION_SELECT_COLUMNS)
+        .eq("status", "pending")
+        .in("kind", ["ride", "scheduled"])
+        .order("created_at", { ascending: false })
+        .limit(limit),
+      supabase
+        .from("reservations")
+        .select(RESERVATION_SELECT_COLUMNS)
+        .eq("driver_id", driverId)
+        .order("created_at", { ascending: false })
+        .limit(limit),
+    ]);
+
+    if (pendingResult.error) {
+      throw new Error(pendingResult.error.message || "Failed to load pending reservation rides.");
+    }
+    if (driverResult.error) {
+      throw new Error(driverResult.error.message || "Failed to load driver reservations.");
+    }
+
+    const reservationsById = new Map<string, ReservationRecord>();
+
+    for (const row of pendingResult.data ?? []) {
+      const reservation = mapReservationRow(row as ReservationRow);
+      reservationsById.set(reservation.id, reservation);
+    }
+
+    for (const row of driverResult.data ?? []) {
+      const reservation = mapReservationRow(row as ReservationRow);
+      reservationsById.set(reservation.id, reservation);
+    }
+
+    return sortReservationsByCreatedAt([...reservationsById.values()]);
+  },
+
   async listPendingRideReservations(limit = 50): Promise<ReservationRecord[]> {
     const { data, error } = await supabase
       .from("reservations")
@@ -228,7 +298,7 @@ export const supabaseReservationsDataSource: ReservationsDataSource = {
         canceled_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .eq("user_id", userId)
+      .or(`user_id.eq.${userId},driver_id.eq.${userId}`)
       .in("status", [...CANCELABLE_RESERVATION_STATUSES])
       .select(RESERVATION_SELECT_COLUMNS)
       .single();

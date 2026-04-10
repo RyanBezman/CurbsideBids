@@ -5,7 +5,7 @@ import { getUserRole } from "@domain/user";
 import { supabase } from "@shared/api";
 import {
   cancelReservation,
-  listPendingRideReservations,
+  listDriverHomeReservations,
   listRecentReservations,
 } from "../api";
 
@@ -126,6 +126,7 @@ export function useRecentReservations(user: User | null) {
   const [recentReservations, setRecentReservations] = useState<ReservationRecord[]>([]);
   const [isLoadingRecentReservations, setIsLoadingRecentReservations] = useState(false);
   const [isCancelingReservation, setIsCancelingReservation] = useState(false);
+  const [cancelingReservationId, setCancelingReservationId] = useState<string | null>(null);
   const [isSyncingNewPendingReservation, setIsSyncingNewPendingReservation] = useState(false);
 
   const loadRecentReservations = useCallback(
@@ -148,7 +149,7 @@ export function useRecentReservations(user: User | null) {
       try {
         const reservations =
           getUserRole(user) === "driver"
-            ? await listPendingRideReservations(100)
+            ? await listDriverHomeReservations(userId, 100)
             : await listRecentReservations(userId, 10);
         setRecentReservations(reservations);
       } catch (error) {
@@ -177,16 +178,15 @@ export function useRecentReservations(user: User | null) {
       if (!user) {
         throw new Error("You need to be signed in to cancel a ride.");
       }
-      if (getUserRole(user) === "driver") {
-        throw new Error("Drivers cannot cancel rider reservations.");
-      }
 
       setIsCancelingReservation(true);
+      setCancelingReservationId(reservationId);
 
       try {
         await cancelReservation(reservationId, user.id);
         await loadRecentReservations(user.id);
       } finally {
+        setCancelingReservationId(null);
         setIsCancelingReservation(false);
       }
     },
@@ -200,6 +200,7 @@ export function useRecentReservations(user: User | null) {
 
   return {
     handleCancelReservation,
+    cancelingReservationId,
     isCancelingReservation,
     isLoadingRecentReservations,
     isSyncingNewPendingReservation,

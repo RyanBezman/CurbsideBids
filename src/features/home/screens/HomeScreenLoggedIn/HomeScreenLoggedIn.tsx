@@ -1,6 +1,7 @@
 import { StatusBar } from "expo-status-bar";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Alert,
   LayoutAnimation,
   Platform,
   SafeAreaView,
@@ -26,11 +27,80 @@ type HomeScreenLoggedInProps = {
   onNavigate: (route: AppRouteName) => void;
   onRefreshReservations: () => Promise<void>;
   recentReservations: ReservationRecord[];
+  cancelingReservationId: string | null;
   isLoadingRecentReservations: boolean;
   isSyncingNewPendingReservation: boolean;
   isCancelingReservation: boolean;
   onCancelReservation: (id: string) => Promise<void>;
 };
+
+type RiderBidAlertState = {
+  activeBidCount: number;
+  reservationId: string;
+  status: ReservationRecord["status"];
+};
+
+function useRiderBidAlerts({
+  activeReservation,
+  isDriver,
+  onReviewOffers,
+  selectedReservationId,
+}: {
+  activeReservation: ReservationRecord | null;
+  isDriver: boolean;
+  onReviewOffers: (reservationId: string) => void;
+  selectedReservationId: string | null;
+}) {
+  const previousPendingBidStateRef = useRef<RiderBidAlertState | null>(null);
+
+  useEffect(() => {
+    if (isDriver || !activeReservation) {
+      previousPendingBidStateRef.current = null;
+      return;
+    }
+
+    const previousState = previousPendingBidStateRef.current;
+    const nextState: RiderBidAlertState = {
+      reservationId: activeReservation.id,
+      activeBidCount: activeReservation.activeBidCount,
+      status: activeReservation.status,
+    };
+
+    if (
+      previousState &&
+      previousState.reservationId === activeReservation.id &&
+      activeReservation.status === "pending" &&
+      activeReservation.activeBidCount > previousState.activeBidCount &&
+      selectedReservationId !== activeReservation.id
+    ) {
+      Alert.alert("New driver bid", "A driver just placed a bid for your ride.", [
+        { text: "Later", style: "cancel" },
+        {
+          text: "Review offers",
+          onPress: () => onReviewOffers(activeReservation.id),
+        },
+      ]);
+    }
+
+    if (
+      previousState &&
+      previousState.reservationId === activeReservation.id &&
+      previousState.status !== "accepted" &&
+      activeReservation.status === "accepted" &&
+      selectedReservationId !== activeReservation.id
+    ) {
+      Alert.alert("Ride accepted", "Your driver accepted the ride.", [
+        { text: "Later", style: "cancel" },
+        {
+          text: "View ride",
+          onPress: () => onReviewOffers(activeReservation.id),
+        },
+      ]);
+    }
+
+    previousPendingBidStateRef.current = nextState;
+  }, [activeReservation, isDriver, onReviewOffers, selectedReservationId]);
+}
 
 export function HomeScreenLoggedIn({
   user,
@@ -38,6 +108,7 @@ export function HomeScreenLoggedIn({
   onNavigate,
   onRefreshReservations,
   recentReservations,
+  cancelingReservationId,
   isLoadingRecentReservations,
   isSyncingNewPendingReservation,
   isCancelingReservation,
@@ -66,6 +137,13 @@ export function HomeScreenLoggedIn({
       recentReservations.find((reservation) => reservation.id === selectedReservationId) ?? null,
     [recentReservations, selectedReservationId],
   );
+
+  useRiderBidAlerts({
+    activeReservation: activeReservationForTimeline,
+    isDriver,
+    onReviewOffers: setSelectedReservationId,
+    selectedReservationId,
+  });
 
   useEffect(() => {
     if (!selectedReservationId) return;
@@ -113,6 +191,9 @@ export function HomeScreenLoggedIn({
 
         {isDriver ? (
           <DriverHomeSection
+            cancelingReservationId={cancelingReservationId}
+            isCancelingReservation={isCancelingReservation}
+            onCancelReservation={onCancelReservation}
             recentReservations={recentReservations}
             userId={user.id}
             isLoadingRecentReservations={isLoadingRecentReservations}

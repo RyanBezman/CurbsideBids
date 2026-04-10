@@ -28,6 +28,13 @@ export async function createScheduledReservation(
   );
 }
 
+export async function listDriverHomeReservations(
+  driverId: string,
+  limit = 100,
+): Promise<ReservationRecord[]> {
+  return supabaseReservationsDataSource.listDriverHomeReservations(driverId, limit);
+}
+
 export async function listRecentReservations(
   userId: string,
   limit = 10,

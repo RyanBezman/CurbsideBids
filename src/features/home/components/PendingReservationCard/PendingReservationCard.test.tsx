@@ -11,6 +11,7 @@ function buildReservation(): ReservationRecord {
     driverId: null,
     selectedBidId: null,
     activeBidCount: 0,
+    lowestActiveBidAmountCents: null,
     agreedFareCents: null,
     maxFareCents: 1800,
     rideType: "Economy",

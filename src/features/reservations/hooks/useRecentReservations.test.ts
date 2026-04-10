@@ -19,11 +19,13 @@ jest.mock("@shared/api", () => ({
 
 jest.mock("../api", () => ({
   cancelReservation: jest.fn(),
+  listDriverHomeReservations: jest.fn(),
   listPendingRideReservations: jest.fn(),
   listRecentReservations: jest.fn(),
 }));
 
 type MockReservationsApiModule = {
+  listDriverHomeReservations: jest.Mock;
   listRecentReservations: jest.Mock;
 };
 
@@ -48,6 +50,7 @@ function buildReservation(
     driverId: null,
     selectedBidId: null,
     activeBidCount: 0,
+    lowestActiveBidAmountCents: null,
     agreedFareCents: null,
     maxFareCents: 2400,
     rideType: "Economy",
@@ -69,7 +72,9 @@ async function flushMicrotasks() {
 }
 
 describe("useRecentReservations", () => {
-  const { listRecentReservations } = jest.requireMock("../api") as MockReservationsApiModule;
+  const { listDriverHomeReservations, listRecentReservations } = jest.requireMock(
+    "../api",
+  ) as MockReservationsApiModule;
 
   beforeEach(() => {
     bidChannelCallbacks.clear();
@@ -95,8 +100,9 @@ describe("useRecentReservations", () => {
       return channel;
     });
     listRecentReservations.mockReset().mockResolvedValue([
-      buildReservation({ activeBidCount: 1 }),
+      buildReservation({ activeBidCount: 1, lowestActiveBidAmountCents: 1850 }),
     ]);
+    listDriverHomeReservations.mockReset().mockResolvedValue([buildReservation()]);
   });
 
   it("refreshes rider reservations when a visible reservation bid changes", async () => {
@@ -122,7 +128,27 @@ describe("useRecentReservations", () => {
 
     expect(listRecentReservations).toHaveBeenCalledWith("rider-1", 10);
     expect(hookState?.recentReservations).toEqual([
-      expect.objectContaining({ activeBidCount: 1 }),
+      expect.objectContaining({ activeBidCount: 1, lowestActiveBidAmountCents: 1850 }),
     ]);
+  });
+
+  it("loads the combined driver home reservations feed for drivers", async () => {
+    let hookState: ReturnType<typeof useRecentReservations> | null = null;
+
+    function HookHarness() {
+      hookState = useRecentReservations(buildUser("driver-1", "driver"));
+      return null;
+    }
+
+    act(() => {
+      create(createElement(HookHarness));
+    });
+
+    await act(async () => {
+      await hookState?.loadRecentReservations("driver-1");
+    });
+    await flushMicrotasks();
+
+    expect(listDriverHomeReservations).toHaveBeenCalledWith("driver-1", 100);
   });
 });

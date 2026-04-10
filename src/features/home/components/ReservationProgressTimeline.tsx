@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import {
+  formatBidAmount,
   canCancelReservationStatus,
   type ReservationRecord,
 } from "@domain/reservations";
@@ -119,6 +120,13 @@ export function ReservationProgressTimeline({
       <View className="flex-row items-center gap-2">
         <Text className="text-base font-semibold text-white">Ride Status</Text>
         <LiveBadge pulse={pulse} />
+        {hasIncomingBids ? (
+          <View className="rounded-full border border-amber-400/35 bg-amber-500/15 px-2.5 py-0.5">
+            <Text className="text-[10px] font-semibold tracking-wide text-amber-200">
+              {reservation.activeBidCount === 1 ? "1 BID" : `${reservation.activeBidCount} BIDS`}
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       <TimelineProgress currentStep={currentStep} stepLabel={liveStatusLabel} />
@@ -126,11 +134,25 @@ export function ReservationProgressTimeline({
       {hasIncomingBids ? (
         <View className="mt-4 rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-3 py-3">
           <Text className="text-[11px] font-semibold uppercase tracking-wide text-emerald-200">
-            Offers Ready
+            Active bids
           </Text>
           <Text className="mt-1 text-sm text-emerald-50">
-            {formatActiveBidSummary(reservation.activeBidCount)}. Open the ride to compare bids.
+            {formatActiveBidSummary(reservation.activeBidCount)}
+            {reservation.lowestActiveBidAmountCents !== null
+              ? ` with the best offer at ${formatBidAmount(reservation.lowestActiveBidAmountCents)}.`
+              : "."}{" "}
+            Open the ride to compare bids.
           </Text>
+          {reservation.lowestActiveBidAmountCents !== null ? (
+            <View className="mt-3 flex-row items-center justify-between rounded-lg border border-emerald-300/20 bg-emerald-950/40 px-3 py-2">
+              <Text className="text-xs font-medium uppercase tracking-wide text-emerald-200">
+                Best offer
+              </Text>
+              <Text className="text-base font-semibold text-white">
+                {formatBidAmount(reservation.lowestActiveBidAmountCents)}
+              </Text>
+            </View>
+          ) : null}
         </View>
       ) : null}
 
@@ -153,7 +175,11 @@ export function ReservationProgressTimeline({
                 : "text-xs font-medium text-neutral-300"
             }
           >
-            {hasIncomingBids ? "Review offers" : "View details"}
+            {hasIncomingBids
+              ? reservation.activeBidCount === 1
+                ? "Review 1 offer"
+                : `Review ${reservation.activeBidCount} offers`
+              : "View details"}
           </Text>
         </TouchableOpacity>
 

@@ -56,6 +56,7 @@ export function AppRoot() {
   } = useRideRequestFlow();
 
   const {
+    cancelingReservationId,
     handleCancelReservation,
     isCancelingReservation,
     isLoadingRecentReservations,
@@ -161,6 +162,7 @@ export function AppRoot() {
                 recentReservations={recentReservations}
                 isLoadingRecentReservations={isLoadingRecentReservations}
                 isSyncingNewPendingReservation={isSyncingNewPendingReservation}
+                cancelingReservationId={cancelingReservationId}
                 isCancelingReservation={isCancelingReservation}
                 onCancelReservation={handleCancelReservation}
               />

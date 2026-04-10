@@ -15,6 +15,7 @@ export interface ReservationsDataSource {
     input: CreateScheduledReservationInput,
     userId: string,
   ): Promise<{ id: string }>;
+  listDriverHomeReservations(driverId: string, limit?: number): Promise<ReservationRecord[]>;
   listRecentReservations(userId: string, limit?: number): Promise<ReservationRecord[]>;
   listPendingRideReservations(limit?: number): Promise<ReservationRecord[]>;
   cancelReservation(id: string, userId: string): Promise<ReservationRecord>;
